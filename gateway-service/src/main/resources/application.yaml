@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id : r1
+              uri: lb://PATIENT-SERVICE
+              predicates:
+                - Path= /patients/**
