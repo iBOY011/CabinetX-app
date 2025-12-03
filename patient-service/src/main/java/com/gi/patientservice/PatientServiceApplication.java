@@ -22,7 +22,7 @@ public class PatientServiceApplication {
             patientRepository.save(Patient.builder()
                     .cin("AB123456")
                     .nom("Alami")
-                    .prenom("Mohammed")
+                    .prenom("Mohamed")
                     .dateNaissance(LocalDate.of(1985, 3, 15))
                     .numTel("0612345678")
                     .cabinetId(1L)
