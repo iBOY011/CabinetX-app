@@ -145,7 +145,6 @@
                 <version>3.5.0</version>
                 <configuration>
                     <configLocation>google_checks.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                 </configuration>
@@ -163,7 +162,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.24.0</version>
+                <version>3.28.0</version>
                 <configuration>
                     <printFailingErrors>true</printFailingErrors>
                     <failOnViolation>true</failOnViolation>
@@ -186,7 +185,7 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.4</version>
+                <version>4.9.8.2</version>
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Medium</threshold>
@@ -206,7 +205,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>0.8.14</version>
                 <executions>
                     <!-- Active l’agent JaCoCo avant les tests -->
                     <execution>
@@ -229,13 +228,11 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>9.2.0</version>
+                <version>12.1.9</version>
 
                 <configuration>
-                    <!-- Ne pas faire échouer le build si le scan a un problème technique -->
-                    <failOnError>false</failOnError>
-                    <!-- (optionnel) pour l’instant on pourrait désactiver complètement le scan -->
-                    <!-- <skip>true</skip> -->
+                    <!-- On lit la clé depuis la variable d’environnement -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
                 </configuration>
 
                 <executions>
@@ -246,6 +243,7 @@
                     </execution>
                 </executions>
             </plugin>
+
 
 
 
