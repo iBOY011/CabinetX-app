@@ -10,7 +10,7 @@ pipeline {
         stage('Build & Test - patient-service') {
             steps {
                 dir('patient-service') {
-                ./mvnw clean verify
+                    sh './mvnw clean verify '
                 }
             }
         }
