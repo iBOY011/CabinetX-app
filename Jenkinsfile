@@ -10,11 +10,11 @@ pipeline {
         stage('Build & Test - patient-service') {
             steps {
                 dir('patient-service') {
-                    sh './mvnw clean verify'  +
-                       '-Dspring.cloud.config.enabled=false ' +
-                       '-Dspring.cloud.bootstrap.enabled=false ' +
-                       '-Dspring.cloud.config.fail-fast=false'
-                }
+                                                   sh './mvnw clean verify ' +
+                                                      '-Dspring.cloud.config.enabled=false ' +
+                                                      '-Dspring.cloud.bootstrap.enabled=false ' +
+                                                      '-Dspring.cloud.config.fail-fast=false'
+                                               }
             }
         }
 
