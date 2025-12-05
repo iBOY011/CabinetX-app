@@ -1,7 +1,6 @@
 package com.gi.chatbotservice.Service;
 
-import com.gi.chatbotservice.Model.DTO.ChatMessageRequest;
-import com.gi.chatbotservice.Model.DTO.ChatMessageResponse;
+import com.gi.chatbotservice.Model.DTO.*;
 import com.gi.chatbotservice.Model.Entity.BookingContext;
 import com.gi.chatbotservice.Model.Entity.ChatMessage;
 import com.gi.chatbotservice.Model.Entity.ChatSession;
@@ -13,14 +12,24 @@ import java.util.List;
 public interface IChatbotService {
 
     /**
+     * Create a new chat session
+     */
+    SessionResponse createSession();
+
+    /**
+     * Close/terminate a chat session
+     */
+    void closeSession(String sessionToken);
+
+    /**
      * Main entry point - processes a user message and returns a response
      */
     ChatMessageResponse traiterMessage(ChatMessageRequest request);
 
     /**
-     * Get or create a chat session
+     * Get or create a chat session by token
      */
-    ChatSession getOrCreateSession(Long sessionId);
+    ChatSession getSessionByToken(String sessionToken);
 
     /**
      * Save a user message to the database
@@ -45,12 +54,12 @@ public interface IChatbotService {
     /**
      * Process response based on detected intent
      */
-    ChatMessageResponse processIntent(ChatSession session, String message, IntentType intent);
+    ChatMessageResponse processIntent(ChatSession session, ChatMessageRequest request, IntentType intent);
 
     /**
      * Get available time slots for a cabinet on a specific date
      */
-    List<String> obtenirCreneauxDisponibles(Long cabinetId, LocalDate date);
+    List<String> obtenirCreneauxDisponibles(Long cabinetId, Long doctorId, LocalDate date);
 
     /**
      * Reserve an appointment
@@ -61,4 +70,24 @@ public interface IChatbotService {
      * Get or create a booking context for a session
      */
     BookingContext getOrCreateBookingContext(Long sessionId);
+
+    /**
+     * Get booking context for a session if exists
+     */
+    BookingContext getBookingContext(Long sessionId);
+
+    /**
+     * Delete booking context if missing critical info
+     */
+    void deleteBookingContextIfInvalid(BookingContext context);
+
+    /**
+     * Get list of available cabinets with their doctors
+     */
+    List<CabinetDTO> getCabinetsWithDoctors();
+
+    /**
+     * Convert BookingContext to DTO
+     */
+    BookingContextDTO toBookingContextDTO(BookingContext context);
 }

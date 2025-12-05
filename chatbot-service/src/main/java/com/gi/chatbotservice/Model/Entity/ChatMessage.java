@@ -23,6 +23,7 @@ public class ChatMessage {
 
     private boolean estUtilisateur;
 
+    @Column(length = 2000)
     private String contenu;
 
     @Enumerated(EnumType.STRING)

@@ -19,10 +19,21 @@ public class ChatSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String sessionToken;
+
     private LocalDateTime dateDebut;
+
+    private LocalDateTime dateFin;
 
     private boolean active;
 
     @Enumerated(EnumType.STRING)
     private IntentType dernierIntent;
+
+    @PrePersist
+    protected void onCreate() {
+        dateDebut = LocalDateTime.now();
+        active = true;
+    }
 }

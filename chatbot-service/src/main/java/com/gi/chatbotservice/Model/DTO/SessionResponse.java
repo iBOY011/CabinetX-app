@@ -1,21 +1,23 @@
 package com.gi.chatbotservice.Model.DTO;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessageRequest {
+@Builder
+public class SessionResponse {
 
     private String sessionToken;
 
-    private String message;
+    private LocalDateTime createdAt;
 
-    private Long selectedCabinetId;
+    private boolean active;
 
-    private Long selectedDoctorId;
-
-    private String selectedCreneau;
+    private String welcomeMessage;
 }

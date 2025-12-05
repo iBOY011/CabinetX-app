@@ -12,4 +12,8 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
     ChatSession save(ChatSession session);
 
     Optional<ChatSession> findById(Long id);
+
+    Optional<ChatSession> findBySessionToken(String sessionToken);
+
+    Optional<ChatSession> findBySessionTokenAndActiveTrue(String sessionToken);
 }
