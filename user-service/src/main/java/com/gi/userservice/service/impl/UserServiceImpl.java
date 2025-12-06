@@ -1,5 +1,6 @@
 package com.gi.userservice.service.impl;
 
+import com.gi.userservice.exception.BusinessException;
 import com.gi.userservice.model.dto.UserDTO;
 import com.gi.userservice.model.dto.request.CreateUserRequest;
 import com.gi.userservice.model.entity.DoctorProfile;
@@ -43,17 +44,14 @@ public class UserServiceImpl implements UserService {
         if (request.getRole() == UserRole.DOCTOR) {
             DoctorProfile profile = new DoctorProfile();
             profile.setUserId(savedUser.getId());
-            profile.setClinicId(request.getClinicId()); // Assuming clinicId in request
             doctorProfileRepository.save(profile);
         } else if (request.getRole() == UserRole.SECRETARY) {
             SecretaryProfile profile = new SecretaryProfile();
             profile.setUserId(savedUser.getId());
-            profile.setClinicId(request.getClinicId());
             secretaryProfileRepository.save(profile);
         }
 
         UserDTO dto = mapToDTO(savedUser);
-        dto.setClinicId(request.getClinicId());
         return dto;
     }
 
@@ -62,14 +60,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         UserDTO dto = mapToDTO(user);
-        // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
-            doctorProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
-            secretaryProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        }
         return dto;
     }
 
@@ -93,17 +83,14 @@ public class UserServiceImpl implements UserService {
     public UserDTO activateUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isActive()) {
+            throw new BusinessException("User is already active");
+        }
+
         user.setActive(true);
         User saved = userRepository.save(user);
         UserDTO dto = mapToDTO(saved);
-        // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
-            doctorProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
-            secretaryProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        }
         return dto;
     }
 
@@ -112,37 +99,15 @@ public class UserServiceImpl implements UserService {
     public UserDTO deactivateUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isActive()) {
+            throw new BusinessException("User is already inactive");
+        }
+
         user.setActive(false);
         User saved = userRepository.save(user);
         UserDTO dto = mapToDTO(saved);
-        // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
-            doctorProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
-            secretaryProfileRepository.findByUserId(user.getId())
-                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        }
         return dto;
-    }
-
-    @Override
-    public List<UserDTO> listByClinic(Long clinicId) {
-        // Assuming we query profiles for clinic
-        List<Long> userIds = doctorProfileRepository.findByClinicId(clinicId).stream()
-                .map(DoctorProfile::getUserId)
-                .collect(Collectors.toList());
-        userIds.addAll(secretaryProfileRepository.findByClinicId(clinicId).stream()
-                .map(SecretaryProfile::getUserId)
-                .collect(Collectors.toList()));
-
-        return userRepository.findAllById(userIds).stream()
-                .map(user -> {
-                    UserDTO dto = mapToDTO(user);
-                    dto.setClinicId(clinicId);
-                    return dto;
-                })
-                .collect(Collectors.toList());
     }
 
     @Override

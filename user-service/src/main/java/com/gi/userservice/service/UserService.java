@@ -18,7 +18,5 @@ public interface UserService {
 
     UserDTO deactivateUser(Long id);
 
-    List<UserDTO> listByClinic(Long clinicId);
-
     List<UserDTO> listByRole(UserRole role);
 }

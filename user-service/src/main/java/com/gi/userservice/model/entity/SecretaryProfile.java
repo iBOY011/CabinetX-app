@@ -18,7 +18,4 @@ public class SecretaryProfile {
 
     @Column(nullable = false)
     private Long userId;
-
-    @Column(nullable = false)
-    private Long clinicId;
 }

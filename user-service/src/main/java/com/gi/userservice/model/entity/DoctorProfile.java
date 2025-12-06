@@ -20,8 +20,4 @@ public class DoctorProfile {
     private Long userId;
 
     private String digitalSignature;
-
-    @Column(nullable = false)
-    private Long clinicId;
-
 }

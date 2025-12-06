@@ -4,6 +4,8 @@ import com.gi.userservice.model.dto.UserDTO;
 import com.gi.userservice.model.dto.request.CreateUserRequest;
 import com.gi.userservice.model.enums.UserRole;
 import com.gi.userservice.service.UserService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,19 +22,21 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserDTO dto = userService.createUser(request);
+        dto.setPassword(null);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         UserDTO dto = userService.findById(id);
+        dto.setPassword(null);
         return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
         UserDTO updated = userService.updateUser(id, dto);
         return ResponseEntity.ok(updated);
     }
@@ -47,12 +51,6 @@ public class UserController {
     public ResponseEntity<UserDTO> deactivateUser(@PathVariable Long id) {
         UserDTO dto = userService.deactivateUser(id);
         return ResponseEntity.ok(dto);
-    }
-
-    @GetMapping("/clinic/{clinicId}")
-    public ResponseEntity<List<UserDTO>> listByClinic(@PathVariable Long clinicId) {
-        List<UserDTO> dtos = userService.listByClinic(clinicId);
-        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/role/{role}")
