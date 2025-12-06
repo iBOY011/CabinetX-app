@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: medication-service
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: 8090
