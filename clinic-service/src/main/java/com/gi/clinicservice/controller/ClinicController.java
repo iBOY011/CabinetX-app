@@ -2,6 +2,8 @@ package com.gi.clinicservice.controller;
 
 import com.gi.clinicservice.model.dto.ClinicDTO;
 import com.gi.clinicservice.service.ClinicService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +18,12 @@ public class ClinicController {
     private final ClinicService service;
 
     @PostMapping
-    public ResponseEntity<ClinicDTO> createClinic(@RequestBody ClinicDTO request) {
+    public ResponseEntity<ClinicDTO> createClinic(@Valid @RequestBody ClinicDTO request) {
         return ResponseEntity.ok(service.createClinic(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClinicDTO> updateClinic(@PathVariable Long id, @RequestBody ClinicDTO request) {
+    public ResponseEntity<ClinicDTO> updateClinic(@PathVariable Long id, @Valid @RequestBody ClinicDTO request) {
         return ResponseEntity.ok(service.updateClinic(id, request));
     }
 

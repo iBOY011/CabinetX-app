@@ -65,12 +65,14 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     public List<ClinicDTO> findActive() {
-        return repository.findByStatus(ClinicStatus.ACTIVE).stream().map(mapper::toResponse).collect(Collectors.toList());
+        return repository.findByStatus(ClinicStatus.ACTIVE).stream().map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ClinicDTO> findNearExpiration(int daysBefore) {
         LocalDate date = LocalDate.now().plusDays(daysBefore);
-        return repository.findByServiceEndDateBefore(date).stream().map(mapper::toResponse).collect(Collectors.toList());
+        return repository.findByServiceEndDateBefore(date).stream().map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 }
