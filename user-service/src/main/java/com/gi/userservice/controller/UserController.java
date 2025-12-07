@@ -38,24 +38,28 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
         UserDTO updated = userService.updateUser(id, dto);
+        updated.setPassword(null);
         return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/activate")
     public ResponseEntity<UserDTO> activateUser(@PathVariable Long id) {
         UserDTO dto = userService.activateUser(id);
+        dto.setPassword(null);
         return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<UserDTO> deactivateUser(@PathVariable Long id) {
         UserDTO dto = userService.deactivateUser(id);
+        dto.setPassword(null);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserDTO>> listByRole(@PathVariable UserRole role) {
         List<UserDTO> dtos = userService.listByRole(role);
+        dtos.forEach(dto -> dto.setPassword(null));
         return ResponseEntity.ok(dtos);
     }
 }

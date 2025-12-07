@@ -1,14 +1,15 @@
 package com.gi.userservice.model.dto;
 
+import com.gi.userservice.model.enums.UserRole;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.gi.userservice.model.enums.UserRole;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class UserDTO  {
 
     private Long id;
     private String firstName;
@@ -18,4 +19,5 @@ public class UserDTO {
     private String phoneNumber;
     private UserRole role;
     private boolean active;
+
 }
