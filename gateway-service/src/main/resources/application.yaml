@@ -4,7 +4,12 @@ spring:
       server:
         webflux:
           routes:
-            - id : r1
+            - id : patient-service
               uri: lb://PATIENT-SERVICE
               predicates:
                 - Path= /patients/**
+
+            - id: consultation-service
+              uri: lb://CONSULTATION-SERVICE
+              predicates:
+                - Path= /consultation/**

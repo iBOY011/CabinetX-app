@@ -38,5 +38,13 @@ build/
 ### Mac OS ###
 .DS_Store
 
+<<<<<<< HEAD
 ### Resources ###
 chatbot-service/src/main/resources/*
+=======
+
+.idea
+application-*.yml
+application-*.properties
+application.properties
+>>>>>>> de9e669253c126414041a787f52c2072d1b88232
