@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: analytics-service
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: 8088
