@@ -1,15 +1,15 @@
 package com.gi.clinicservice.mapper;
 
-import com.gi.clinicservice.model.dto.request.ClinicRequest;
-import com.gi.clinicservice.model.dto.response.ClinicResponse;
+import com.gi.clinicservice.model.dto.ClinicDTO;
 import com.gi.clinicservice.model.entity.Clinic;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClinicMapper {
 
-    public Clinic toEntity(ClinicRequest request) {
-        if (request == null) return null;
+    public Clinic toEntity(ClinicDTO request) {
+        if (request == null)
+            return null;
         Clinic clinic = new Clinic();
         clinic.setName(request.getName());
         clinic.setSpecialty(request.getSpecialty());
@@ -21,10 +21,10 @@ public class ClinicMapper {
         return clinic;
     }
 
-    public ClinicResponse toResponse(Clinic entity) {
-        if (entity == null) return null;
-        ClinicResponse response = new ClinicResponse();
-        response.setId(entity.getId());
+    public ClinicDTO toResponse(Clinic entity) {
+        if (entity == null)
+            return null;
+        ClinicDTO response = new ClinicDTO();
         response.setName(entity.getName());
         response.setSpecialty(entity.getSpecialty());
         response.setPhone(entity.getPhone());
@@ -35,8 +35,9 @@ public class ClinicMapper {
         return response;
     }
 
-    public void updateEntity(ClinicRequest request, Clinic entity) {
-        if (request == null || entity == null) return;
+    public void updateEntity(ClinicDTO request, Clinic entity) {
+        if (request == null || entity == null)
+            return;
         entity.setName(request.getName());
         entity.setSpecialty(request.getSpecialty());
         entity.setPhone(request.getPhone());
