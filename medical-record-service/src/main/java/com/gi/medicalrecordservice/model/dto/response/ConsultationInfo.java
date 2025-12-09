@@ -1,6 +1,6 @@
-package com.gi.medicalrecordservice.dto;
+package com.gi.medicalrecordservice.model.dto.response;
 
-import com.gi.medicalrecordservice.enums.ConsultationType;
+import com.gi.medicalrecordservice.model.enums.ConsultationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ConsultationInfo {
     private Long id;
-    private LocalDateTime dateConsultation;
+    private LocalDateTime consultationDate;
     private ConsultationType type;
-    private String diagnostic;
-    private String traitement;
+    private String diagnosis;
+    private String treatment;
 }

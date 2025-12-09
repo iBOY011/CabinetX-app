@@ -1,6 +1,6 @@
-package com.gi.medicalrecordservice.entities;
+package com.gi.medicalrecordservice.model.entity;
 
-import com.gi.medicalrecordservice.enums.TypeDocument;
+import com.gi.medicalrecordservice.model.enums.DocumentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,42 +23,42 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "document_medical")
+@Table(name = "medical_document")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = "dossier")
-public class DocumentMedical {
+@ToString(exclude = "medicalRecord")
+public class MedicalDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private DossierMedical dossier;
+    private MedicalRecord medicalRecord;
 
     @Column(nullable = false)
-    private String nomFichier;
+    private String fileName;
 
-    private String typeFichier;
+    private String fileType;
 
-    private String urlFichier;
+    private String fileUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TypeDocument typeDocument;
+    private DocumentType documentType;
 
     @Lob
     @Column(nullable = false)
-    private byte[] contenu;
+    private byte[] content;
 
     @Column(nullable = false)
-    private LocalDateTime dateAjout;
+    private LocalDateTime additionDate;
 
     @PrePersist
     void prePersist() {
-        dateAjout = LocalDateTime.now();
+        additionDate = LocalDateTime.now();
     }
 }

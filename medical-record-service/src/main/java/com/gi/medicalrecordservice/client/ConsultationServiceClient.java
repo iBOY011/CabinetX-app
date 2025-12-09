@@ -1,6 +1,6 @@
 package com.gi.medicalrecordservice.client;
 
-import com.gi.medicalrecordservice.dto.ConsultationInfo;
+import com.gi.medicalrecordservice.model.dto.response.ConsultationInfo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

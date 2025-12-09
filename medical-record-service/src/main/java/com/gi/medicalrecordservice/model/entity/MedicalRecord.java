@@ -1,4 +1,4 @@
-package com.gi.medicalrecordservice.entities;
+package com.gi.medicalrecordservice.model.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -28,7 +28,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @ToString(exclude = "documents")
-public class DossierMedical {
+public class MedicalRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,34 +37,34 @@ public class DossierMedical {
     @Column(nullable = false, unique = true)
     private Long patientId;
 
-    private String antecedents;
+    private String medicalHistory;
     private String allergies;
-    private String traitements;
-    private String habitudes;
+    private String treatments;
+    private String habits;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime dateCreation;
+    private LocalDateTime creationDate;
 
     @Column(nullable = false)
-    private LocalDateTime derniereMiseAJour;
+    private LocalDateTime lastUpdate;
 
     @Builder.Default
-    @OneToMany(mappedBy = "dossier", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DocumentMedical> documents = new ArrayList<>();
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<MedicalDocument> documents = new ArrayList<>();
 
     @PrePersist
     void prePersist() {
-        dateCreation = LocalDateTime.now();
-        derniereMiseAJour = dateCreation;
+        creationDate = LocalDateTime.now();
+        lastUpdate = creationDate;
     }
 
     @PreUpdate
     void preUpdate() {
-        derniereMiseAJour = LocalDateTime.now();
+        lastUpdate = LocalDateTime.now();
     }
 
-    public void ajouterDocument(DocumentMedical document) {
-        document.setDossier(this);
+    public void addDocument(MedicalDocument document) {
+        document.setMedicalRecord(this);
         documents.add(document);
     }
 }

@@ -1,9 +1,9 @@
 package com.gi.medicalrecordservice.config;
 
-import com.gi.medicalrecordservice.entities.DocumentMedical;
-import com.gi.medicalrecordservice.entities.DossierMedical;
-import com.gi.medicalrecordservice.enums.TypeDocument;
-import com.gi.medicalrecordservice.repository.DossierMedicalRepository;
+import com.gi.medicalrecordservice.model.entity.MedicalDocument;
+import com.gi.medicalrecordservice.model.entity.MedicalRecord;
+import com.gi.medicalrecordservice.model.enums.DocumentType;
+import com.gi.medicalrecordservice.repository.MedicalRecordRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,33 +18,32 @@ import java.util.UUID;
 @Slf4j
 public class MedicalRecordInitializer {
 
-    private final DossierMedicalRepository dossierMedicalRepository;
+    private final MedicalRecordRepository medicalRecordRepository;
 
     @PostConstruct
     @Transactional
     public void seedData() {
-        if (dossierMedicalRepository.count() > 0) {
+        if (medicalRecordRepository.count() > 0) {
             return;
         }
 
         for (long patientId = 1; patientId <= 3; patientId++) {
-                DossierMedical dossier = DossierMedical.builder()
+            MedicalRecord medicalRecord = MedicalRecord.builder()
                     .patientId(patientId)
-                    .medecinReferent("Docteur Demo " + patientId)
-                    .resumeMedical("Patient " + patientId + " sans antecedent majeur.")
+                    .medicalHistory("Patient " + patientId + " with no major history.")
                     .build();
 
-                            dossier.ajouterDocument(DocumentMedical.builder()
-                                .nomFichier("analyse-" + patientId + ".pdf")
-                                .typeDocument(TypeDocument.ANALYSE)
-                                .urlFichier("https://docs.example.com/" + UUID.randomUUID())
-                                .contenu(new byte[0])
-                                .dateAjout(LocalDate.now().minusDays(patientId).atStartOfDay())
-                                .build());
+            medicalRecord.addDocument(MedicalDocument.builder()
+                    .fileName("analysis-" + patientId + ".pdf")
+                    .documentType(DocumentType.ANALYSIS)
+                    .fileUrl("https://docs.example.com/" + UUID.randomUUID())
+                    .content(new byte[0])
+                    .additionDate(LocalDate.now().minusDays(patientId).atStartOfDay())
+                    .build());
 
-            dossierMedicalRepository.save(dossier);
+            medicalRecordRepository.save(medicalRecord);
         }
 
-        log.info("Données de démonstration insérées pour les dossiers médicaux");
+        log.info("Demo data inserted for medical records");
     }
 }
