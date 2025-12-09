@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/clinicdb
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
