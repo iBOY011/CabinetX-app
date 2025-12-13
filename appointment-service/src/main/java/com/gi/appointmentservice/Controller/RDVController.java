@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gi.appointmentservice.Model.DTO.RDVRequest;
 import com.gi.appointmentservice.Model.DTO.RDVResponse;
 import com.gi.appointmentservice.Model.DTO.UpdateDto;
+import com.gi.appointmentservice.Model.Enum.StatutRDV;
 import com.gi.appointmentservice.Service.RDVService;
 
 import lombok.RequiredArgsConstructor;
@@ -47,5 +48,13 @@ public class RDVController {
         rdvService.deleteRendezVous(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/updateStatus/{id}/{statut}")
+    public ResponseEntity<RDVResponse> updateStatusRendezVous(@PathVariable Long id, @PathVariable StatutRDV statut) {
+        RDVResponse response = rdvService.updateStatusRendezVous(id, statut);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 }
