@@ -1,6 +1,0 @@
-spring:
-  application:
-    name: medical-record-service
-  cloud:
-    config:
-      enabled: false
