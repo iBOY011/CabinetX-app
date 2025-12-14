@@ -13,3 +13,8 @@ spring:
               uri: lb://CONSULTATION-SERVICE
               predicates:
                 - Path= /consultation/**
+
+            - id: appointment-service
+              uri: lb://APPOINTMENT-SERVICE
+              predicates:
+                - Path= /appointments/**
