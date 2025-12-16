@@ -1,17 +1,16 @@
 package com.gi.clinicservice.service;
 
-import com.gi.clinicservice.model.dto.request.ClinicRequest;
-import com.gi.clinicservice.model.dto.response.ClinicResponse;
+import com.gi.clinicservice.model.dto.ClinicDTO;
 
 import java.util.List;
 
 public interface ClinicService {
-    ClinicResponse createClinic(ClinicRequest request);
-    ClinicResponse updateClinic(Long id, ClinicRequest request);
-    ClinicResponse activateClinic(Long id);
-    ClinicResponse deactivateClinic(Long id);
-    ClinicResponse findById(Long id);
-    List<ClinicResponse> findAll();
-    List<ClinicResponse> findActive();
-    List<ClinicResponse> findNearExpiration(int daysBefore);
+    ClinicDTO createClinic(ClinicDTO request);
+    ClinicDTO updateClinic(Long id, ClinicDTO request);
+    ClinicDTO activateClinic(Long id);
+    ClinicDTO deactivateClinic(Long id);
+    ClinicDTO findById(Long id);
+    List<ClinicDTO> findAll();
+    List<ClinicDTO> findActive();
+    List<ClinicDTO> findNearExpiration(int daysBefore);
 }

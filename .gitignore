@@ -38,6 +38,8 @@ build/
 ### Mac OS ###
 .DS_Store
 
+### Resources ###
+chatbot-service/src/main/resources/*
 
 .idea
 application-*.yml
