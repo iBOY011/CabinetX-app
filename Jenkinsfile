@@ -9,10 +9,12 @@ pipeline {
     stages {
         stage('Dependency Check') {
             steps {
-                sh '''
-                    export MAVEN_OPTS="-Xmx600m -Xms512m"
-                    ./mvnw clean install org.owasp:dependency-check-maven:check -DupdateOnly=true
-                '''
+                dir('patient-service') {
+                    sh '''
+                        export MAVEN_OPTS="-Xmx600m -Xms512m"
+                        ./mvnw clean install org.owasp:dependency-check-maven:check -DupdateOnly=true
+                    '''
+                }
             }
         }
 
