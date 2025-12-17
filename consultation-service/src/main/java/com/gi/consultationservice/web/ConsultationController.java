@@ -6,6 +6,8 @@ import com.gi.consultationservice.service.ConsultationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +48,7 @@ public class ConsultationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ConsultationDTO trouverParId(@PathVariable Long id) {
         return consultationService.trouverParId(id);
     }
@@ -71,5 +74,10 @@ public class ConsultationController {
                                                              @RequestParam LocalDateTime debut,
                                                              @RequestParam LocalDateTime fin) {
         return consultationService.listerParMedecinEtPeriode(medecinId, debut, fin);
+    }
+
+    @GetMapping("/auth")
+    public Authentication authentication(Authentication authentication) {
+        return authentication;
     }
 }
