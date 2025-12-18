@@ -1,0 +1,11 @@
+**/target/
+!**/target/*.jar
+.git
+.gitignore
+.idea
+**/*.md
+**/*.iml
+**/.mvn
+**/mvnw
+**/mvnw.cmd
+Jenkinsfile

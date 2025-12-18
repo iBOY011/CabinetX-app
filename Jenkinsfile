@@ -2,16 +2,21 @@ pipeline {
     agent any
 
     environment {
-        // Token Sonar stocké dans Jenkins (Kind: Secret text ou Username+password pour sonar-scanner)
+        // Token Sonar stocké dans Jenkins (Kind: Secret text)
         SONAR_TOKEN = credentials('sonar-cabinetx-token')
+        MAVEN_OPTS = "-Xms128m -Xmx256m -XX:+UseSerialGC"
+    }
+
+    options {
+        disableConcurrentBuilds() // Avoid multiple jobs consuming RAM
+        timeout(time: 30, unit: 'MINUTES') // Prevent stuck jobs
     }
 
     stages {
-        stage('Dependency Check') {
+        stage('Dependency Check - patient-service') {
             steps {
                 dir('patient-service') {
                     sh '''
-                        export MAVEN_OPTS="-Xmx600m -Xms512m"
                         ./mvnw clean install org.owasp:dependency-check-maven:check -DupdateOnly=true
                     '''
                 }
@@ -21,28 +26,32 @@ pipeline {
         stage('Build & Test - patient-service') {
             steps {
                 dir('patient-service') {
-                    sh './mvnw clean verify '
+                    sh './mvnw clean verify'
                 }
             }
         }
 
-        stage('SonarQube - patient-service') {
+        stage('SonarCloud Analysis - patient-service') {
             steps {
                 dir('patient-service') {
                     sh """
                     ./mvnw sonar:sonar \
-                      -Dsonar.projectKey=cabinetx-patient-service \
-                      -Dsonar.projectName='CabinetX - patient-service' \
-                      -Dsonar.host.url=http://host.docker.internal:9000 \
-                      -Dsonar.token=${SONAR_TOKEN}
+                    -Dsonar.projectKey=cabinetx-patient-service \
+                    -Dsonar.host.url=https://sonarcloud.io \
+                    -Dsonar.login=${SONAR_TOKEN}
                     """
                 }
             }
         }
 
-        // TODO: plus tard vous ajouterez :
+        // Future microservices:
         // stage('Build & Test - appointment-service') { ... }
-        // stage('SonarQube - appointment-service') { ... }
-        // etc.
+        // stage('SonarCloud - appointment-service') { ... }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+        }
     }
 }

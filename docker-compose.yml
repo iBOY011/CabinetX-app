@@ -1,0 +1,222 @@
+version: '3.8'
+
+services:
+  discovery-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: discovery-service
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - cabinetx-network
+
+  configuration-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: configuration-service
+    container_name: configuration-service
+    ports:
+      - "8888:8888"
+    networks:
+      - cabinetx-network
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    networks:
+      - cabinetx-network
+
+  patient-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: patient-service
+    container_name: patient-service
+    ports:
+      - "8081:8080"
+    networks:
+      - cabinetx-network
+
+  appointment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: appointment-service
+    container_name: appointment-service
+    ports:
+      - "8082:8080"
+    networks:
+      - cabinetx-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    container_name: auth-service
+    ports:
+      - "8083:8080"
+    networks:
+      - cabinetx-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: user-service
+    container_name: user-service
+    ports:
+      - "8085:8085"
+    networks:
+      - cabinetx-network
+
+  clinic-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: clinic-service
+    container_name: clinic-service
+    ports:
+      - "8086:8080"
+    networks:
+      - cabinetx-network
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: billing-service
+    container_name: billing-service
+    ports:
+      - "8087:8080"
+    networks:
+      - cabinetx-network
+
+  consultation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: consultation-service
+    container_name: consultation-service
+    ports:
+      - "8088:8080"
+    networks:
+      - cabinetx-network
+
+  medical-record-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: medical-record-service
+    container_name: medical-record-service
+    ports:
+      - "8089:8080"
+    networks:
+      - cabinetx-network
+
+  medication-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: medication-service
+    container_name: medication-service
+    ports:
+      - "8090:8080"
+    networks:
+      - cabinetx-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: notification-service
+    container_name: notification-service
+    ports:
+      - "8091:8080"
+    networks:
+      - cabinetx-network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: payment-service
+    ports:
+      - "8092:8080"
+    networks:
+      - cabinetx-network
+
+  prescription-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: prescription-service
+    container_name: prescription-service
+    ports:
+      - "8093:8080"
+    networks:
+      - cabinetx-network
+
+  queue-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: queue-service
+    container_name: queue-service
+    ports:
+      - "8094:8080"
+    networks:
+      - cabinetx-network
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: analytics-service
+    container_name: analytics-service
+    ports:
+      - "8095:8080"
+    networks:
+      - cabinetx-network
+
+  chatbot-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: chatbot-service
+    container_name: chatbot-service
+    ports:
+      - "8096:8080"
+    networks:
+      - cabinetx-network
+
+networks:
+  cabinetx-network:
+    driver: bridge
