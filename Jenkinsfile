@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk17'   // The name you set in Global Tool Configuration
+        jdk 'jdk21'   // The name you set in Global Tool Configuration
         maven 'Maven3' // If Maven installed via Jenkins, optional
     }
 
