@@ -1,15 +1,8 @@
 pipeline {
     agent any
-
-    tools {
-        jdk 'JDK 21'   // The name you set in Global Tool Configuration
-        // maven 'Maven3' // If Maven installed via Jenkins, optional
-    }
-
     environment {
         SONAR_TOKEN = credentials('sonar-cabinetx-token')
         MAVEN_OPTS = "-Xms128m -Xmx256m -XX:+UseSerialGC"
-        JAVA_HOME = tool 'JDK 21'  // Explicitly set JAVA_HOME
     }
 
     options {
@@ -18,6 +11,17 @@ pipeline {
     }
 
     stages {
+        stage('Verify Environment') {
+            steps {
+                sh '''
+                    echo "Java version:"
+                    java -version
+                    echo "JAVA_HOME: $JAVA_HOME"
+                    echo "PATH: $PATH"
+                '''
+            }
+        }
+
         stage('Dependency Check - patient-service') {
             steps {
                 dir('patient-service') {
