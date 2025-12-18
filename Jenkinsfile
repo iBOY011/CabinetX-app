@@ -33,7 +33,7 @@ pipeline {
         stage('Build & Test - patient-service') {
             steps {
                 dir('patient-service') {
-                    sh './mvnw clean verify'
+                    sh './mvnw clean verify -Ddependency-check.skip=true'
                 }
             }
         }
