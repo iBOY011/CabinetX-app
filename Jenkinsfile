@@ -43,6 +43,7 @@ pipeline {
                 dir('patient-service') {
                     sh """
                     ./mvnw sonar:sonar \
+                      -Dsonar.organization=cabinetx \
                       -Dsonar.projectKey=cabinetx-patient-service \
                       -Dsonar.host.url=https://sonarcloud.io \
                       -Dsonar.login=${SONAR_TOKEN}
