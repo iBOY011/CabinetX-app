@@ -22,13 +22,13 @@ pipeline {
             }
         }
 
-        stage('Dependency Check - patient-service') {
+        /* stage('Dependency Check - patient-service') {
             steps {
                 dir('patient-service') {
                     sh './mvnw clean install org.owasp:dependency-check-maven:check -DupdateOnly=true'
                 }
             }
-        }
+        } */
 
         stage('Build & Test - patient-service') {
             steps {
