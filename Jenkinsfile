@@ -28,126 +28,180 @@ pipeline {
                 stage('discovery-service') {
                     steps {
                         dir('discovery-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('configuration-service') {
                     steps {
                         dir('configuration-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('gateway-service') {
                     steps {
                         dir('gateway-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('patient-service') {
                     steps {
                         dir('patient-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('user-service') {
                     steps {
                         dir('user-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('auth-service') {
                     steps {
                         dir('auth-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('appointment-service') {
                     steps {
                         dir('appointment-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('billing-service') {
                     steps {
                         dir('billing-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('clinic-service') {
                     steps {
                         dir('clinic-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('consultation-service') {
                     steps {
                         dir('consultation-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('medical-record-service') {
                     steps {
                         dir('medical-record-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('medication-service') {
                     steps {
                         dir('medication-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('notification-service') {
                     steps {
                         dir('notification-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('payment-service') {
                     steps {
                         dir('payment-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('prescription-service') {
                     steps {
                         dir('prescription-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('queue-service') {
                     steps {
                         dir('queue-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('analytics-service') {
                     steps {
                         dir('analytics-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
                 stage('chatbot-service') {
                     steps {
                         dir('chatbot-service') {
-                            sh './mvnw clean verify -Ddependency-check.skip=true'
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true
+                            '''
                         }
                     }
                 }
@@ -160,6 +214,7 @@ pipeline {
                     steps {
                         dir('patient-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-patient-service \
@@ -174,6 +229,7 @@ pipeline {
                     steps {
                         dir('user-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-user-service \
@@ -188,6 +244,7 @@ pipeline {
                     steps {
                         dir('auth-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-auth-service \
@@ -202,6 +259,7 @@ pipeline {
                     steps {
                         dir('appointment-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-appointment-service \
@@ -216,6 +274,7 @@ pipeline {
                     steps {
                         dir('billing-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-billing-service \
@@ -230,6 +289,7 @@ pipeline {
                     steps {
                         dir('clinic-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-clinic-service \
@@ -244,6 +304,7 @@ pipeline {
                     steps {
                         dir('consultation-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-consultation-service \
@@ -258,6 +319,7 @@ pipeline {
                     steps {
                         dir('medical-record-service') {
                             sh """
+                            chmod +x mvnw
                             ./mvnw sonar:sonar \
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-medical-record-service \
