@@ -9,6 +9,7 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('sonar-cabinetx-token')
         MAVEN_OPTS = "-Xms128m -Xmx256m -XX:+UseSerialGC"
+        JAVA_HOME = tool 'JDK 21'  // Explicitly set JAVA_HOME
     }
 
     options {
