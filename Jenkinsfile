@@ -18,6 +18,7 @@ pipeline {
                     java -version
                     echo "JAVA_HOME: $JAVA_HOME"
                     echo "PATH: $PATH"
+                    echo "Branch: ${GIT_BRANCH}"
                 '''
             }
         }
@@ -163,7 +164,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-patient-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -176,7 +178,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-user-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -189,7 +192,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-auth-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -202,7 +206,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-appointment-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -215,7 +220,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-billing-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -228,7 +234,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-clinic-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -241,7 +248,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-consultation-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
@@ -254,7 +262,8 @@ pipeline {
                               -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-medical-record-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN}
+                              -Dsonar.login=${SONAR_TOKEN} \
+                              -Dsonar.branch.name=${GIT_BRANCH}
                             """
                         }
                     }
