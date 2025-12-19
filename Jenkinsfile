@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        SONAR_TOKEN = credentials('sonar-cabinetx-token')
+        SONAR_TOKEN = credentials('sonar-token')
         MAVEN_OPTS = "-Xms128m -Xmx256m -XX:+UseSerialGC"
     }
 
@@ -198,7 +198,7 @@ pipeline {
             }
         }
 
-        stage('SonarCloud Analysis') {
+        stage('SonarQube Analysis') {
             parallel {
                 stage('sonar-patient-service') {
                     steps {
@@ -206,9 +206,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-patient-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Patient Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -220,9 +220,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-user-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="User Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -234,9 +234,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-auth-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Auth Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -248,9 +248,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-appointment-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Appointment Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -262,9 +262,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-billing-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Billing Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -276,9 +276,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-clinic-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Clinic Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -290,9 +290,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-consultation-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Consultation Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
@@ -304,9 +304,9 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-medical-record-service \
-                              -Dsonar.host.url=https://sonarcloud.io \
+                              -Dsonar.projectName="Medical Record Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
                               -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
