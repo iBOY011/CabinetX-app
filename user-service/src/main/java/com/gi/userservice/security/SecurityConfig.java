@@ -1,4 +1,4 @@
-package com.gi.notificationservice.security;
+package com.gi.userservice.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
