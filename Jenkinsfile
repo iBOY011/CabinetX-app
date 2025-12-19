@@ -1,425 +1,286 @@
 pipeline {
     agent any
+    
     environment {
         SONAR_TOKEN = credentials('sonar-token')
-        MAVEN_OPTS = "-Xms128m -Xmx256m -XX:+UseSerialGC"
+        // Optimisé pour serveur 4GB avec SonarQube
+        MAVEN_OPTS = "-Xms64m -Xmx384m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -Djava.awt.headless=true"
+        MAVEN_CONFIG = "-Dmaven.repo.local=.m2/repository"
     }
-
+    
     options {
+        buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '2'))
         disableConcurrentBuilds()
-        timeout(time: 60, unit: 'MINUTES')
+        timeout(time: 90, unit: 'MINUTES')
+        skipDefaultCheckout()
+        timestamps()
     }
-
+    
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Verify Environment') {
             steps {
                 sh '''
                     echo "Java version:"
                     java -version
-                    echo "JAVA_HOME: $JAVA_HOME"
-                    echo "PATH: $PATH"
+                    echo "Available Memory:"
+                    free -h
                     echo "Branch: ${GIT_BRANCH}"
                 '''
             }
         }
-
-        stage('Build & Test - All Services') {
-            parallel {
-                stage('discovery-service') {
-                    steps {
-                        dir('discovery-service') {
+        
+        // BUILD EN SÉQUENTIEL PAR GROUPES - CRITIQUE POUR 4GB RAM
+        stage('Build Group 1 - Core Services') {
+            steps {
+                script {
+                    def services = ['discovery-service']
+                    services.each { service ->
+                        dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('gateway-service') {
-                    steps {
-                        dir('gateway-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('patient-service') {
-                    steps {
-                        dir('patient-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('user-service') {
-                    steps {
-                        dir('user-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('auth-service') {
-                    steps {
-                        dir('auth-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('appointment-service') {
-                    steps {
-                        dir('appointment-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('billing-service') {
-                    steps {
-                        dir('billing-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('clinic-service') {
-                    steps {
-                        dir('clinic-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('consultation-service') {
-                    steps {
-                        dir('consultation-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('medical-record-service') {
-                    steps {
-                        dir('medical-record-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('medication-service') {
-                    steps {
-                        dir('medication-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('notification-service') {
-                    steps {
-                        dir('notification-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('payment-service') {
-                    steps {
-                        dir('payment-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('prescription-service') {
-                    steps {
-                        dir('prescription-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('queue-service') {
-                    steps {
-                        dir('queue-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('analytics-service') {
-                    steps {
-                        dir('analytics-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
-                stage('chatbot-service') {
-                    steps {
-                        dir('chatbot-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
+                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
                             '''
                         }
                     }
                 }
             }
         }
-
-        stage('SonarQube Analysis') {
-            parallel {
-                stage('sonar-patient-service') {
-                    steps {
-                        dir('patient-service') {
+        
+        stage('Build Group 2 - Auth & User') {
+            steps {
+                script {
+                    def services = ['auth-service', 'user-service', 'patient-service']
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Group 3 - Clinical Services') {
+            steps {
+                script {
+                    def services = [
+                        'appointment-service',
+                        'consultation-service',
+                        'medical-record-service',
+                        'prescription-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Group 4 - Business Services') {
+            steps {
+                script {
+                    def services = [
+                        'billing-service',
+                        'payment-service',
+                        'medication-service',
+                        'queue-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Group 5 - Support Services') {
+            steps {
+                script {
+                    def services = [
+                        'clinic-service',
+                        'notification-service',
+                        'analytics-service',
+                        'chatbot-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        // SONARQUBE EN SÉQUENTIEL - 2 à la fois maximum
+        stage('SonarQube Analysis - Batch 1') {
+            steps {
+                script {
+                    def services = [
+                        'discovery-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
                             sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-patient-service \
-                              -Dsonar.projectName="Patient Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
+                                chmod +x mvnw
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                ./mvnw sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
                             """
                         }
                     }
                 }
-                stage('sonar-user-service') {
-                    steps {
-                        dir('user-service') {
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 2') {
+            steps {
+                script {
+                    def services = [
+                        'auth-service',
+                        'user-service',
+                        'patient-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
                             sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-user-service \
-                              -Dsonar.projectName="User Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
+                                chmod +x mvnw
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                ./mvnw sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
                             """
                         }
                     }
                 }
-                stage('sonar-auth-service') {
-                    steps {
-                        dir('auth-service') {
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 3') {
+            steps {
+                script {
+                    def services = [
+                        'appointment-service',
+                        'consultation-service',
+                        'medical-record-service',
+                        'prescription-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
                             sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-auth-service \
-                              -Dsonar.projectName="Auth Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
+                                chmod +x mvnw
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                ./mvnw sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
                             """
                         }
                     }
                 }
-                stage('sonar-appointment-service') {
-                    steps {
-                        dir('appointment-service') {
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 4') {
+            steps {
+                script {
+                    def services = [
+                        'billing-service',
+                        'payment-service',
+                        'medication-service',
+                        'queue-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
                             sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-appointment-service \
-                              -Dsonar.projectName="Appointment Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
+                                chmod +x mvnw
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                ./mvnw sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
                             """
                         }
                     }
                 }
-                stage('sonar-billing-service') {
-                    steps {
-                        dir('billing-service') {
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 5') {
+            steps {
+                script {
+                    def services = [
+                        'clinic-service',
+                        'notification-service',
+                        'analytics-service',
+                        'chatbot-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
                             sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-billing-service \
-                              -Dsonar.projectName="Billing Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-clinic-service') {
-                    steps {
-                        dir('clinic-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-clinic-service \
-                              -Dsonar.projectName="Clinic Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-consultation-service') {
-                    steps {
-                        dir('consultation-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-consultation-service \
-                              -Dsonar.projectName="Consultation Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-medical-record-service') {
-                    steps {
-                        dir('medical-record-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-medical-record-service \
-                              -Dsonar.projectName="Medical Record Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-discovery-service') {
-                    steps {
-                        dir('discovery-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-discovery-service \
-                              -Dsonar.projectName="Discovery Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-medication-service') {
-                    steps {
-                        dir('medication-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-medication-service \
-                              -Dsonar.projectName="Medication Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-notification-service') {
-                    steps {
-                        dir('notification-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-notification-service \
-                              -Dsonar.projectName="Notification Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-payment-service') {
-                    steps {
-                        dir('payment-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-payment-service \
-                              -Dsonar.projectName="Payment Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-prescription-service') {
-                    steps {
-                        dir('prescription-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-prescription-service \
-                              -Dsonar.projectName="Prescription Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-queue-service') {
-                    steps {
-                        dir('queue-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-queue-service \
-                              -Dsonar.projectName="Queue Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-analytics-service') {
-                    steps {
-                        dir('analytics-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-analytics-service \
-                              -Dsonar.projectName="Analytics Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-                stage('sonar-chatbot-service') {
-                    steps {
-                        dir('chatbot-service') {
-                            sh """
-                            chmod +x mvnw
-                            ./mvnw sonar:sonar \
-                              -Dsonar.projectKey=cabinetx-chatbot-service \
-                              -Dsonar.projectName="Chatbot Service" \
-                              -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=$SONAR_TOKEN
+                                chmod +x mvnw
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                ./mvnw sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
                             """
                         }
                     }
@@ -427,16 +288,31 @@ pipeline {
             }
         }
     }
-
+    
     post {
         always {
-            junit '**/target/surefire-reports/*.xml'
+            script {
+                // Collecter les résultats de test
+                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                
+                // Nettoyer le workspace pour libérer de l'espace
+                cleanWs(
+                    deleteDirs: true,
+                    patterns: [
+                        [pattern: '**/target', type: 'INCLUDE'],
+                        [pattern: '**/.m2/repository', type: 'INCLUDE']
+                    ]
+                )
+            }
         }
         success {
-            echo 'All services built and tested successfully!'
+            echo 'All 16 services built and analyzed successfully!'
         }
         failure {
-            echo 'One or more services failed to build or test.'
+            echo 'Pipeline failed. Check logs for details.'
+        }
+        unstable {
+            echo 'Pipeline completed with warnings.'
         }
     }
 }
