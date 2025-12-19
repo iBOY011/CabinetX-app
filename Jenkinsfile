@@ -206,7 +206,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-patient-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -220,7 +220,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-user-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -234,7 +234,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-auth-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -248,7 +248,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-appointment-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -262,7 +262,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-billing-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -276,7 +276,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-clinic-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -290,7 +290,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-consultation-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
@@ -304,7 +304,7 @@ pipeline {
                             sh """
                             chmod +x mvnw
                             ./mvnw sonar:sonar \
-                              -Dsonar.organization=cabinet \
+                              -Dsonar.organization=cabinetx \
                               -Dsonar.projectKey=cabinetx-medical-record-service \
                               -Dsonar.host.url=https://sonarcloud.io \
                               -Dsonar.login=${SONAR_TOKEN}
