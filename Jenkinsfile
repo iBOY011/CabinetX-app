@@ -54,10 +54,10 @@ pipeline {
             }
         }
         
-        stage('Build Group 2 - Auth & User') {
+        stage('Build Group 2 - Patient & User') {
             steps {
                 script {
-                    def services = ['auth-service', 'user-service', 'patient-service']
+                    def services = ['user-service', 'patient-service']
                     services.each { service ->
                         dir(service) {
                             sh '''
@@ -174,7 +174,6 @@ pipeline {
             steps {
                 script {
                     def services = [
-                        'auth-service',
                         'user-service',
                         'patient-service'
                     ]
