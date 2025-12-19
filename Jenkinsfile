@@ -44,7 +44,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
