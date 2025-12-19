@@ -295,13 +295,7 @@ pipeline {
                 junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                 
                 // Nettoyer le workspace pour libérer de l'espace
-                cleanWs(
-                    deleteDirs: true,
-                    patterns: [
-                        [pattern: '**/target', type: 'INCLUDE'],
-                        [pattern: '**/.m2/repository', type: 'INCLUDE']
-                    ]
-                )
+                deleteDir()
             }
         }
         success {
