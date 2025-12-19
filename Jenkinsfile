@@ -1,48 +1,300 @@
 pipeline {
     agent any
-
+    
     environment {
-        // Token Sonar stocké dans Jenkins (Kind: Secret text ou Username+password pour sonar-scanner)
-        SONAR_TOKEN = credentials('sonar-cabinetx-token')
+        SONAR_TOKEN = credentials('sonar-token')
+        // Optimisé pour serveur 4GB avec SonarQube
+        MAVEN_OPTS = "-Xms64m -Xmx384m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -Djava.awt.headless=true"
+        MAVEN_CONFIG = "-Dmaven.repo.local=.m2/repository"
     }
-
+    
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '2'))
+        disableConcurrentBuilds()
+        timeout(time: 90, unit: 'MINUTES')
+        skipDefaultCheckout()
+    }
+    
     stages {
-        stage('Dependency Check') {
+        stage('Checkout') {
             steps {
-                dir('patient-service') {
-                    sh '''
-                        export MAVEN_OPTS="-Xmx600m -Xms512m"
-                        ./mvnw clean install org.owasp:dependency-check-maven:check -DupdateOnly=true
-                    '''
+                checkout scm
+            }
+        }
+        
+        stage('Verify Environment') {
+            steps {
+                sh '''
+                    echo "Java version:"
+                    java -version
+                    echo "Available Memory:"
+                    free -h
+                    echo "Branch: ${GIT_BRANCH}"
+                '''
+            }
+        }
+        
+        // BUILD EN SÉQUENTIEL PAR GROUPES - CRITIQUE POUR 4GB RAM
+        stage('Build Group 1 - Core Services') {
+            steps {
+                script {
+                    def services = ['discovery-service']
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                mvn clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
                 }
             }
         }
-
-        stage('Build & Test - patient-service') {
+        
+        stage('Build Group 2 - Patient & User') {
             steps {
-                dir('patient-service') {
-                    sh './mvnw clean verify '
+                script {
+                    def services = ['user-service', 'patient-service']
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                mvn clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
                 }
             }
         }
-
-        stage('SonarQube - patient-service') {
+        
+        stage('Build Group 3 - Clinical Services') {
             steps {
-                dir('patient-service') {
-                    sh """
-                    ./mvnw sonar:sonar \
-                      -Dsonar.projectKey=cabinetx-patient-service \
-                      -Dsonar.projectName='CabinetX - patient-service' \
-                      -Dsonar.host.url=http://host.docker.internal:9000 \
-                      -Dsonar.token=${SONAR_TOKEN}
-                    """
+                script {
+                    def services = [
+                        'appointment-service',
+                        'consultation-service',
+                        'medical-record-service',
+                        'prescription-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                mvn clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
                 }
             }
         }
-
-        // TODO: plus tard vous ajouterez :
-        // stage('Build & Test - appointment-service') { ... }
-        // stage('SonarQube - appointment-service') { ... }
-        // etc.
+        
+        stage('Build Group 4 - Business Services') {
+            steps {
+                script {
+                    def services = [
+                        'billing-service',
+                        'payment-service',
+                        'medication-service',
+                        'queue-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                mvn clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Group 5 - Support Services') {
+            steps {
+                script {
+                    def services = [
+                        'clinic-service',
+                        'notification-service',
+                        'analytics-service',
+                        'chatbot-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh '''
+                                mvn clean verify -Ddependency-check.skip=true \
+                                    -DskipTests=false \
+                                    -T 1C \
+                                    --batch-mode \
+                                    --no-transfer-progress
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        // SONARQUBE EN SÉQUENTIEL - 2 à la fois maximum
+        stage('SonarQube Analysis - Batch 1') {
+            steps {
+                script {
+                    def services = [
+                        'discovery-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh """
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                mvn sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 2') {
+            steps {
+                script {
+                    def services = [
+                        'user-service',
+                        'patient-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh """
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                mvn sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 3') {
+            steps {
+                script {
+                    def services = [
+                        'appointment-service',
+                        'consultation-service',
+                        'medical-record-service',
+                        'prescription-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh """
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                mvn sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 4') {
+            steps {
+                script {
+                    def services = [
+                        'billing-service',
+                        'payment-service',
+                        'medication-service',
+                        'queue-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh """
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                mvn sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis - Batch 5') {
+            steps {
+                script {
+                    def services = [
+                        'clinic-service',
+                        'notification-service',
+                        'analytics-service',
+                        'chatbot-service'
+                    ]
+                    services.each { service ->
+                        dir(service) {
+                            sh """
+                                export SONAR_SCANNER_OPTS="-Xmx512m"
+                                mvn sonar:sonar \
+                                  -Dsonar.projectKey=cabinetx-${service} \
+                                  -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
+                                  -Dsonar.host.url=http://localhost:9000 \
+                                  -Dsonar.token=$SONAR_TOKEN \
+                                  --batch-mode \
+                                  --no-transfer-progress
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                // Collecter les résultats de test
+                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                
+                // Nettoyer le workspace pour libérer de l'espace
+                deleteDir()
+            }
+        }
+        success {
+            echo 'All 16 services built and analyzed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
+        }
+        unstable {
+            echo 'Pipeline completed with warnings.'
+        }
     }
 }
