@@ -13,7 +13,6 @@ pipeline {
         disableConcurrentBuilds()
         timeout(time: 90, unit: 'MINUTES')
         skipDefaultCheckout()
-        timestamps()
     }
     
     stages {
