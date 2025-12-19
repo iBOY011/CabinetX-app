@@ -199,9 +199,6 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            when {
-                branch 'develop'
-            }
             parallel {
                 stage('sonar-patient-service') {
                     steps {
@@ -212,7 +209,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-patient-service \
                               -Dsonar.projectName="Patient Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -226,7 +223,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-user-service \
                               -Dsonar.projectName="User Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -240,7 +237,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-auth-service \
                               -Dsonar.projectName="Auth Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -254,7 +251,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-appointment-service \
                               -Dsonar.projectName="Appointment Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -268,7 +265,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-billing-service \
                               -Dsonar.projectName="Billing Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -282,7 +279,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-clinic-service \
                               -Dsonar.projectName="Clinic Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -296,7 +293,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-consultation-service \
                               -Dsonar.projectName="Consultation Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
@@ -310,7 +307,119 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-medical-record-service \
                               -Dsonar.projectName="Medical Record Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN}
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-discovery-service') {
+                    steps {
+                        dir('discovery-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-discovery-service \
+                              -Dsonar.projectName="Discovery Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-medication-service') {
+                    steps {
+                        dir('medication-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-medication-service \
+                              -Dsonar.projectName="Medication Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-notification-service') {
+                    steps {
+                        dir('notification-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-notification-service \
+                              -Dsonar.projectName="Notification Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-payment-service') {
+                    steps {
+                        dir('payment-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-payment-service \
+                              -Dsonar.projectName="Payment Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-prescription-service') {
+                    steps {
+                        dir('prescription-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-prescription-service \
+                              -Dsonar.projectName="Prescription Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-queue-service') {
+                    steps {
+                        dir('queue-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-queue-service \
+                              -Dsonar.projectName="Queue Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-analytics-service') {
+                    steps {
+                        dir('analytics-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-analytics-service \
+                              -Dsonar.projectName="Analytics Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                            """
+                        }
+                    }
+                }
+                stage('sonar-chatbot-service') {
+                    steps {
+                        dir('chatbot-service') {
+                            sh """
+                            chmod +x mvnw
+                            ./mvnw sonar:sonar \
+                              -Dsonar.projectKey=cabinetx-chatbot-service \
+                              -Dsonar.projectName="Chatbot Service" \
+                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
                             """
                         }
                     }
