@@ -199,6 +199,9 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            when {
+                branch 'develop'
+            }
             parallel {
                 stage('sonar-patient-service') {
                     steps {
@@ -209,8 +212,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-patient-service \
                               -Dsonar.projectName="Patient Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -224,8 +226,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-user-service \
                               -Dsonar.projectName="User Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -239,8 +240,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-auth-service \
                               -Dsonar.projectName="Auth Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -254,8 +254,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-appointment-service \
                               -Dsonar.projectName="Appointment Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -269,8 +268,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-billing-service \
                               -Dsonar.projectName="Billing Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -284,8 +282,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-clinic-service \
                               -Dsonar.projectName="Clinic Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -299,8 +296,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-consultation-service \
                               -Dsonar.projectName="Consultation Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -314,8 +310,7 @@ pipeline {
                               -Dsonar.projectKey=cabinetx-medical-record-service \
                               -Dsonar.projectName="Medical Record Service" \
                               -Dsonar.host.url=http://localhost:9000 \
-                              -Dsonar.token=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.token=${SONAR_TOKEN}
                             """
                         }
                     }
