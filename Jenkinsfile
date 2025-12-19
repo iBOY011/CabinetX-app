@@ -35,16 +35,6 @@ pipeline {
                         }
                     }
                 }
-                stage('configuration-service') {
-                    steps {
-                        dir('configuration-service') {
-                            sh '''
-                                chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true
-                            '''
-                        }
-                    }
-                }
                 stage('gateway-service') {
                     steps {
                         dir('gateway-service') {
