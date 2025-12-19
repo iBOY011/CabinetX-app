@@ -1,6 +1,6 @@
 package com.gi.patientservice.security;
 
-import com.gi.medicationservice.security.JwtAuthConverter;
+import com.gi.patientservice.security.JwtAuthConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
