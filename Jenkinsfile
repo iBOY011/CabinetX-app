@@ -63,7 +63,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -88,7 +88,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -113,7 +113,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -138,7 +138,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 chmod +x mvnw
-                                ./mvnw clean verify -Ddependency-check.skip=true \
+                                mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -162,7 +162,7 @@ pipeline {
                             sh """
                                 chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
-                                ./mvnw sonar:sonar \
+                                mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
                                   -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
                                   -Dsonar.host.url=http://localhost:9000 \
@@ -189,7 +189,7 @@ pipeline {
                             sh """
                                 chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
-                                ./mvnw sonar:sonar \
+                                mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
                                   -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
                                   -Dsonar.host.url=http://localhost:9000 \
@@ -217,7 +217,7 @@ pipeline {
                             sh """
                                 chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
-                                ./mvnw sonar:sonar \
+                                mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
                                   -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
                                   -Dsonar.host.url=http://localhost:9000 \
@@ -245,7 +245,7 @@ pipeline {
                             sh """
                                 chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
-                                ./mvnw sonar:sonar \
+                                mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
                                   -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
                                   -Dsonar.host.url=http://localhost:9000 \
@@ -273,7 +273,7 @@ pipeline {
                             sh """
                                 chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
-                                ./mvnw sonar:sonar \
+                                mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
                                   -Dsonar.projectName="${service.replaceAll('-', ' ').capitalize()}" \
                                   -Dsonar.host.url=http://localhost:9000 \
