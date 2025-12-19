@@ -209,8 +209,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-patient-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -224,8 +223,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-user-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -239,8 +237,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-auth-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -254,8 +251,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-appointment-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -269,8 +265,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-billing-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -284,8 +279,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-clinic-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -299,8 +293,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-consultation-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
@@ -314,8 +307,7 @@ pipeline {
                               -Dsonar.organization=cabinet \
                               -Dsonar.projectKey=cabinetx-medical-record-service \
                               -Dsonar.host.url=https://sonarcloud.io \
-                              -Dsonar.login=${SONAR_TOKEN} \
-                              -Dsonar.branch.name=${GIT_BRANCH}
+                              -Dsonar.login=${SONAR_TOKEN}
                             """
                         }
                     }
