@@ -42,7 +42,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh '''
-                                chmod +x mvnw
                                 mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
@@ -62,7 +61,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh '''
-                                chmod +x mvnw
                                 mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
@@ -87,7 +85,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh '''
-                                chmod +x mvnw
                                 mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
@@ -112,7 +109,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh '''
-                                chmod +x mvnw
                                 mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
@@ -137,7 +133,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh '''
-                                chmod +x mvnw
                                 mvn clean verify -Ddependency-check.skip=true \
                                     -DskipTests=false \
                                     -T 1C \
@@ -160,7 +155,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh """
-                                chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
                                 mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
@@ -187,7 +181,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh """
-                                chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
                                 mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
@@ -215,7 +208,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh """
-                                chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
                                 mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
@@ -243,7 +235,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh """
-                                chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
                                 mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
@@ -271,7 +262,6 @@ pipeline {
                     services.each { service ->
                         dir(service) {
                             sh """
-                                chmod +x mvnw
                                 export SONAR_SCANNER_OPTS="-Xmx512m"
                                 mvn sonar:sonar \
                                   -Dsonar.projectKey=cabinetx-${service} \
