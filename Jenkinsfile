@@ -127,8 +127,8 @@ pipeline {
                         'clinic-service',
                         'notification-service',
                         'analytics-service',
-                        'chatbot-service'
-                    ]
+/*                         'chatbot-service'
+ */                    ]
                     services.each { service ->
                         dir(service) {
                             sh '''
@@ -254,8 +254,8 @@ pipeline {
                         'clinic-service',
                         'notification-service',
                         'analytics-service',
-                        'chatbot-service'
-                    ]
+/*                         'chatbot-service'
+ */                    ]
                     services.each { service ->
                         dir(service) {
                             sh """
