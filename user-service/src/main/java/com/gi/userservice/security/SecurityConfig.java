@@ -1,4 +1,4 @@
-package com.gi.clinicservice.security;
+package com.gi.userservice.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,22 +42,10 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // IMPORTANT : Utilisez setAllowedOriginPatterns au lieu de setAllowedOrigins
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-
-        // Ou pour plus de sécurité, spécifiez les origines exactes :
-        // configuration.setAllowedOrigins(Arrays.asList(
-        //     "http://localhost:3000",
-        //     "http://localhost:8081",
-        //     "http://localhost:4200"
-        // ));
-
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setAllowCredentials(true); // IMPORTANT : Ajoutez cette ligne
-
+        configuration.setExposedHeaders(Arrays.asList("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
