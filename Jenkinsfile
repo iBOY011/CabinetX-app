@@ -103,8 +103,7 @@ pipeline {
                     def services = [
                         'billing-service',
                         'payment-service',
-                        'medication-service',
-                        'queue-service'
+                        'medication-service'
                     ]
                     services.each { service ->
                         dir(service) {
@@ -228,8 +227,7 @@ pipeline {
                     def services = [
                         'billing-service',
                         'payment-service',
-                        'medication-service',
-                        'queue-service'
+                        'medication-service'
                     ]
                     services.each { service ->
                         dir(service) {
