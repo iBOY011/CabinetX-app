@@ -1,12 +1,13 @@
 package com.gi.consultationservice.dto;
 
+import java.time.OffsetDateTime;
+
 import com.gi.consultationservice.enums.ConsultationType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -19,7 +20,7 @@ public class ConsultationDTO {
     private Long medecinId;
     private Long cabinetId;
     private ConsultationType type;
-    private LocalDateTime dateConsultation;
+    private OffsetDateTime dateConsultation;
     private String examenClinique;
     private String examenSupplementaire;
     private String diagnostic;

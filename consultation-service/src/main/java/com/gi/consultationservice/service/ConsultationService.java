@@ -1,5 +1,15 @@
 package com.gi.consultationservice.service;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
 import com.gi.consultationservice.entities.Consultation;
@@ -7,18 +17,12 @@ import com.gi.consultationservice.entities.ConsultationCreatedEvent;
 import com.gi.consultationservice.mappers.ConsultationMapper;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @Transactional
 public class ConsultationService {
+
+    private static final ZoneOffset DEFAULT_ZONE_OFFSET = ZoneOffset.UTC;
 
     private final ConsultationRepository consultationRepository;
     private final ConsultationEventRepository eventRepository;
@@ -73,15 +77,18 @@ public class ConsultationService {
 
     @Transactional(readOnly = true)
     public List<ConsultationSummaryDTO> listerParMedecinEtJour(Long medecinId, LocalDate date) {
-        LocalDateTime debut = date.atStartOfDay();
-        LocalDateTime fin = date.plusDays(1).atStartOfDay().minusNanos(1);
+        OffsetDateTime debut = date.atStartOfDay().atOffset(DEFAULT_ZONE_OFFSET);
+        OffsetDateTime fin = date.plusDays(1).atStartOfDay().minusNanos(1).atOffset(DEFAULT_ZONE_OFFSET);
         return listerParMedecinEtPeriode(medecinId, debut, fin);
     }
 
     @Transactional(readOnly = true)
-    public List<ConsultationSummaryDTO> listerParMedecinEtPeriode(Long medecinId, LocalDateTime debut, LocalDateTime fin) {
+    public List<ConsultationSummaryDTO> listerParMedecinEtPeriode(Long medecinId, OffsetDateTime debut, OffsetDateTime fin) {
         List<Consultation> consultations = consultationRepository
-                .findByMedecinIdAndDateConsultationBetweenOrderByDateConsultationAsc(medecinId, debut, fin);
+            .findByMedecinIdAndDateConsultationBetweenOrderByDateConsultationAsc(
+                medecinId,
+                debut,
+                fin);
         return consultationMapper.toSummaryList(consultations);
     }
 
