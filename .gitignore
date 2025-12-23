@@ -42,3 +42,7 @@ build/
 application-*.yml
 application-*.properties
 application.properties
+
+
+### Spring Boot env ###
+env/*

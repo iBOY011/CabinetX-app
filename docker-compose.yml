@@ -1,0 +1,300 @@
+services:
+  discovery-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: discovery-service
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - cabinetx-network
+    restart: unless-stopped
+
+  configuration-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: configuration-service
+    container_name: configuration-service
+    ports:
+      - "8888:8888"
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+    restart: unless-stopped
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  patient-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: patient-service
+    container_name: patient-service
+    ports:
+      - "8081:8080"
+    env_file:
+      - ./env/patient-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  appointment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: appointment-service
+    container_name: appointment-service
+    ports:
+      - "8082:8080"
+    env_file:
+      - ./env/appointment-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: user-service
+    container_name: user-service
+    ports:
+      - "8085:8080"
+    env_file:
+      - ./env/user-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  clinic-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: clinic-service
+    container_name: clinic-service
+    ports:
+      - "8086:8080"
+    env_file:
+      - ./env/clinic-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: billing-service
+    container_name: billing-service
+    ports:
+      - "8087:8080"
+    env_file:
+      - ./env/billing-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  consultation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: consultation-service
+    container_name: consultation-service
+    ports:
+      - "8088:8080"
+    env_file:
+      - ./env/consultation-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  medical-record-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: medical-record-service
+    container_name: medical-record-service
+    ports:
+      - "8089:8080"
+    env_file:
+      - ./env/medical-record-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  medication-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: medication-service
+    container_name: medication-service
+    ports:
+      - "8090:8080"
+    env_file:
+      - ./env/medication-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: notification-service
+    container_name: notification-service
+    ports:
+      - "8091:8080"
+    env_file:
+      - ./env/notification-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: payment-service
+    ports:
+      - "8092:8080"
+    env_file:
+      - ./env/payment-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  prescription-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: prescription-service
+    container_name: prescription-service
+    ports:
+      - "8093:8080"
+    env_file:
+      - ./env/prescription-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  queue-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: queue-service
+    container_name: queue-service
+    ports:
+      - "8094:8080"
+    env_file:
+      - ./env/queue-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: analytics-service
+    container_name: analytics-service
+    ports:
+      - "8095:8080"
+    env_file:
+      - ./env/analytics-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+  chatbot-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: chatbot-service
+    container_name: chatbot-service
+    ports:
+      - "8096:8080"
+    env_file:
+      - ./env/chatbot-service.env
+    networks:
+      - cabinetx-network
+    depends_on:
+      - discovery-service
+      - configuration-service
+    restart: unless-stopped
+
+networks:
+  cabinetx-network:
+    driver: bridge
