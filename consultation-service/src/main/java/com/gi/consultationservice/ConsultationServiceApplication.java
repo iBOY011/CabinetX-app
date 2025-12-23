@@ -8,7 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @SpringBootApplication
@@ -33,7 +33,7 @@ public class ConsultationServiceApplication {
                             .medecinId(10L)
                             .cabinetId(1L)
                             .type(ConsultationType.CONSULTATION)
-                            .dateConsultation(LocalDateTime.now().minusDays(5))
+                            .dateConsultation(OffsetDateTime.now().minusDays(5))
                             .examenClinique("Examen général normal")
                             .diagnostic("Fatigue passagère")
                             .traitement("Repos et hydratation")
@@ -45,7 +45,7 @@ public class ConsultationServiceApplication {
                             .medecinId(11L)
                             .cabinetId(1L)
                             .type(ConsultationType.CONTROLE)
-                            .dateConsultation(LocalDateTime.now().minusDays(2))
+                            .dateConsultation(OffsetDateTime.now().minusDays(2))
                             .examenClinique("Pression artérielle stabilisée")
                             .diagnostic("Hypertension contrôlée")
                             .traitement("Poursuivre traitement actuel")
@@ -57,7 +57,7 @@ public class ConsultationServiceApplication {
                             .medecinId(10L)
                             .cabinetId(2L)
                             .type(ConsultationType.CONSULTATION)
-                            .dateConsultation(LocalDateTime.now().minusDays(1))
+                            .dateConsultation(OffsetDateTime.now().minusDays(1))
                             .examenClinique("Douleurs abdominales")
                             .examenSupplementaire("Échographie prévue")
                             .diagnostic("Suspicion gastrite")

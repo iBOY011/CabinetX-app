@@ -1,15 +1,22 @@
 package com.gi.consultationservice.entities;
 
+import java.time.OffsetDateTime;
+
 import com.gi.consultationservice.enums.ConsultationType;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -41,7 +48,7 @@ public class Consultation {
     private ConsultationType type;
 
     @Column(nullable = false)
-    private LocalDateTime dateConsultation;
+    private OffsetDateTime dateConsultation;
 
     @Column(length = 2000)
     private String examenClinique;

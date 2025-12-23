@@ -20,15 +20,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/consultations")
-@RequiredArgsConstructor
+
 public class ConsultationController {
 
     private final ConsultationService consultationService;
+
+    public ConsultationController(ConsultationService consultationService) {
+        this.consultationService = consultationService;
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -71,8 +75,8 @@ public class ConsultationController {
 
     @GetMapping("/medecins/{medecinId}/periode")
     public List<ConsultationSummaryDTO> consultationsPeriode(@PathVariable Long medecinId,
-                                                             @RequestParam LocalDateTime debut,
-                                                             @RequestParam LocalDateTime fin) {
+                                                             @RequestParam OffsetDateTime debut,
+                                                             @RequestParam OffsetDateTime fin) {
         return consultationService.listerParMedecinEtPeriode(medecinId, debut, fin);
     }
 
