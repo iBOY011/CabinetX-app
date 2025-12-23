@@ -1,0 +1,6 @@
+# Ignore actual .env with real passwords
+.env
+
+# Ignore any backup files
+*.bak
+*.backup
