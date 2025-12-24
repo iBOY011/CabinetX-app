@@ -44,3 +44,6 @@ application-*.properties
 application.properties
 
 backend-info-request.txt
+
+### Spring Boot env ###
+env/*
