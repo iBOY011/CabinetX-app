@@ -12,21 +12,6 @@ services:
       - cabinetx-network
     restart: unless-stopped
 
-  configuration-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: configuration-service
-    container_name: configuration-service
-    ports:
-      - "8888:8888"
-    networks:
-      - cabinetx-network
-    depends_on:
-      - discovery-service
-    restart: unless-stopped
-
   gateway-service:
     build:
       context: .
@@ -34,13 +19,16 @@ services:
       args:
         SERVICE_NAME: gateway-service
     container_name: gateway-service
-    ports:
-      - "8080:8080"
+    depends_on:
+      discovery-service:
+        condition: service_started
+        required: true
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka/
     networks:
       - cabinetx-network
-    depends_on:
-      - discovery-service
-      - configuration-service
+    ports:
+      - "8080:8080"
     restart: unless-stopped
 
   patient-service:
@@ -58,7 +46,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   appointment-service:
@@ -76,7 +63,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   user-service:
@@ -94,7 +80,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   clinic-service:
@@ -112,7 +97,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   billing-service:
@@ -130,7 +114,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   consultation-service:
@@ -148,7 +131,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   medical-record-service:
@@ -166,7 +148,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   medication-service:
@@ -184,7 +165,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   notification-service:
@@ -202,7 +182,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   payment-service:
@@ -220,7 +199,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   prescription-service:
@@ -238,7 +216,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   queue-service:
@@ -256,7 +233,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   analytics-service:
@@ -274,7 +250,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
   chatbot-service:
@@ -292,7 +267,6 @@ services:
       - cabinetx-network
     depends_on:
       - discovery-service
-      - configuration-service
     restart: unless-stopped
 
 networks:
