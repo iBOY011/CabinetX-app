@@ -12,9 +12,10 @@ import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Service 
+@Service
 @RequiredArgsConstructor
 public class RDVService {
+
     private final RDVRepository rdvRepository;
 
     public RDVResponse createRendezVous(RDVRequest rdvreqDto) {
