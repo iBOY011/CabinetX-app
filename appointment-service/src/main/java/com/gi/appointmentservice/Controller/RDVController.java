@@ -1,5 +1,7 @@
 package com.gi.appointmentservice.Controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +23,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/appointments")
 public class RDVController {
+
     private final RDVService rdvService;
+    @Autowired
+    private final StreamBridge streamBridge;
 
     @GetMapping("/")
     public String welcome() {
+        String message = "Welcome endpoint called!";
+        
+        // Publish message to Kafka
+        streamBridge.send("queue-topic", message);
+        
         return "Welcome to the Appointment Service!";
     }
 

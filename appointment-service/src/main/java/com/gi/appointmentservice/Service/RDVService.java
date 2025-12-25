@@ -1,4 +1,7 @@
 package com.gi.appointmentservice.Service;
+import java.util.function.Consumer;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +66,17 @@ public class RDVService {
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + rdvId));
         patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient Service
+    }
+
+    @Bean
+    public Consumer<String> welcomeConsumer() {
+        return (message) -> {
+            System.out.println("************************************************");
+            System.out.println("************************************************");
+            System.out.println("Received message from Kafka: " + message);
+            System.out.println("************************************************");
+            System.out.println("************************************************");
+        };
     }
 
 }
