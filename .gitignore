@@ -41,7 +41,6 @@ build/
 .idea
 application-*.yml
 application-*.properties
-application.properties
 
 backend-info-request.txt
 
