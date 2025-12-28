@@ -25,7 +25,7 @@ public class PatientServiceApplication {
     CommandLineRunner start(PatientRepository patientRepository) {
         return args -> {
             List<Patient> samples = List.of(
-                Patient.builder()
+                /* Patient.builder()
                     .cin("AB123456")
                     .nom("Alami")
                     .prenom("Mohamed")
@@ -41,7 +41,7 @@ public class PatientServiceApplication {
                         .pays("Maroc")
                         .build())
                     .build(),
-
+    
                 Patient.builder()
                     .cin("CD789012")
                     .nom("Bennani")
@@ -58,7 +58,7 @@ public class PatientServiceApplication {
                         .pays("Maroc")
                         .build())
                     .build(),
-
+    
                 Patient.builder()
                     .cin("EF345678")
                     .nom("Idrissi")
@@ -75,7 +75,7 @@ public class PatientServiceApplication {
                         .pays("Maroc")
                         .build())
                     .build(),
-
+    
                 Patient.builder()
                     .cin("GH901234")
                     .nom("Et-tayeb")
@@ -91,7 +91,7 @@ public class PatientServiceApplication {
                         .codePostal("30000")
                         .pays("Maroc")
                         .build())
-                    .build()
+                    .build() */
             );
 
             patientRepository.saveAll(samples);

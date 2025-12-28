@@ -4,5 +4,7 @@ public enum StatutRDV {
     CONFIRME,
     EN_CONSULTATION,
     ANNULE,
-    TERMINE
+    TERMINE, 
+    MISSING
+    
 }
