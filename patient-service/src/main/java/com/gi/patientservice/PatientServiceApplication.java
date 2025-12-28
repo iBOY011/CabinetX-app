@@ -1,6 +1,5 @@
 package com.gi.patientservice;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
@@ -8,10 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import com.gi.patientservice.entities.Adresse;
 import com.gi.patientservice.entities.Patient;
-import com.gi.patientservice.enums.Sexe;
-import com.gi.patientservice.enums.TypeMutuelle;
 import com.gi.patientservice.repository.PatientRepository;
 
 @SpringBootApplication
