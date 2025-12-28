@@ -1,9 +1,21 @@
 package com.gi.patientservice.repository;
 
-import com.gi.patientservice.entities.Patient;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import java.util.List;
+import java.util.Optional;
 
-@RepositoryRestResource
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.gi.patientservice.entities.Patient;
+
+@Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
+
+		Optional<Patient> findByCin(String cin);
+
+		List<Patient> findByNomContainingIgnoreCase(String nom);
+
+		List<Patient> findByPrenomContainingIgnoreCase(String prenom);
+
+		List<Patient> findByNomContainingIgnoreCaseAndPrenomContainingIgnoreCase(String nom, String prenom);
 }

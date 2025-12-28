@@ -1,5 +1,7 @@
 package com.gi.patientservice.entities;
 
+import com.gi.patientservice.enums.Sexe;
+import com.gi.patientservice.enums.TypeMutuelle;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,19 +28,19 @@ public class Patient {
     @Column(nullable = false)
     private LocalDate dateNaissance;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private Sexe sexe;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Sexe sexe;
 
     @Column(nullable = false)
     private String numTel;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private TypeMutuelle typeMutuelle;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TypeMutuelle typeMutuelle;
 
-//    @Embedded
-//    private Adresse adresse;
+    @Embedded
+    private Adresse adresse;
 
     @Column(nullable = false)
     private Long cabinetId;
