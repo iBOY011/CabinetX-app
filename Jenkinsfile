@@ -3,6 +3,9 @@ pipeline {
     
     environment {
         SONAR_TOKEN = credentials('sonar-token')
+        CONFIG_GIT_USERNAME = credentials('config-git-username')
+        CONFIG_GIT_PASSWORD = credentials('config-git-password')
+        // Add other sensitive env vars here, e.g., DATABASE_PASSWORD = credentials('db-password')
         // Optimisé pour serveur 4GB avec SonarQube
         MAVEN_OPTS = "-Xms64m -Xmx384m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -Djava.awt.headless=true"
         MAVEN_CONFIG = "-Dmaven.repo.local=.m2/repository"
