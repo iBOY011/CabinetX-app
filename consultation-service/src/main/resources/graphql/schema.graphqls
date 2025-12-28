@@ -1,0 +1,67 @@
+scalar DateTime
+
+enum ConsultationType {
+	CONSULTATION
+	CONTROLE
+}
+
+type Consultation {
+	id: ID!
+	rendezVousId: ID!
+	patientId: ID!
+	medecinId: ID!
+	cabinetId: ID!
+	type: ConsultationType!
+	dateConsultation: DateTime!
+	examenClinique: String
+	examenSupplementaire: String
+	diagnostic: String
+	traitement: String
+	observations: String
+}
+
+input ConsultationScheduleInput {
+	rendezVousId: ID!
+	patientId: ID!
+	medecinId: ID!
+	cabinetId: ID!
+	type: ConsultationType!
+	dateConsultation: DateTime!
+	examenClinique: String
+	examenSupplementaire: String
+	diagnostic: String
+	traitement: String
+	observations: String
+}
+
+input ConsultationNotesInput {
+	examenClinique: String
+	examenSupplementaire: String
+	diagnostic: String
+	traitement: String
+	observations: String
+}
+
+input ConsultationWindowInput {
+	from: DateTime!
+	to: DateTime!
+}
+
+type Query {
+	# Scenario: retrieve a consultation to verify rendez-vous linkage during tests
+	consultationById(id: ID!): Consultation
+
+	# Scenario: list the latest consultations of a patient for regression testing
+	consultationsByPatient(patientId: ID!, limit: Int = 10): [Consultation!]!
+
+	# Scenario: validate medecin planning windows in integration tests
+	medecinConsultationsWindow(medecinId: ID!, window: ConsultationWindowInput!): [Consultation!]!
+}
+
+type Mutation {
+	# Scenario: test scheduling flow coming from the appointment pipeline
+	scheduleConsultation(input: ConsultationScheduleInput!): Consultation!
+
+	# Scenario: test updating notes after diagnostics are completed
+	updateConsultationNotes(id: ID!, notes: ConsultationNotesInput!): Consultation!
+}

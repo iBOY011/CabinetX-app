@@ -38,10 +38,11 @@ build/
 ### Mac OS ###
 .DS_Store
 
-### Resources ###
-chatbot-service/src/main/resources/*
-
 .idea
 application-*.yml
 application-*.properties
-application.properties
+
+backend-info-request.txt
+
+### Spring Boot env ###
+env/*

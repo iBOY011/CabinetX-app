@@ -6,6 +6,8 @@ import com.gi.consultationservice.service.ConsultationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,15 +20,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/consultations")
-@RequiredArgsConstructor
+
 public class ConsultationController {
 
     private final ConsultationService consultationService;
+
+    public ConsultationController(ConsultationService consultationService) {
+        this.consultationService = consultationService;
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -46,6 +52,7 @@ public class ConsultationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ConsultationDTO trouverParId(@PathVariable Long id) {
         return consultationService.trouverParId(id);
     }
@@ -68,8 +75,13 @@ public class ConsultationController {
 
     @GetMapping("/medecins/{medecinId}/periode")
     public List<ConsultationSummaryDTO> consultationsPeriode(@PathVariable Long medecinId,
-                                                             @RequestParam LocalDateTime debut,
-                                                             @RequestParam LocalDateTime fin) {
+                                                             @RequestParam OffsetDateTime debut,
+                                                             @RequestParam OffsetDateTime fin) {
         return consultationService.listerParMedecinEtPeriode(medecinId, debut, fin);
+    }
+
+    @GetMapping("/auth")
+    public Authentication authentication(Authentication authentication) {
+        return authentication;
     }
 }
