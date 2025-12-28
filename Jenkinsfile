@@ -294,7 +294,6 @@ pipeline {
                 }
             }
         }
-    }
     
     stage('Stop Configuration Service') {
         steps {
