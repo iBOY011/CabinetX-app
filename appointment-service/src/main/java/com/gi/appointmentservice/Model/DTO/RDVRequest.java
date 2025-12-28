@@ -12,7 +12,5 @@ public class RDVRequest extends UpdateDto{
 
     private Long patientId;
     private Long cabinetId;
-   
-    
 
 }

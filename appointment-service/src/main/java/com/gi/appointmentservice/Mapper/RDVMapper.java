@@ -2,6 +2,7 @@ package com.gi.appointmentservice.Mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.gi.appointmentservice.Model.DTO.PatientInfoDTO;
 import com.gi.appointmentservice.Model.DTO.RDVRequest;
 import com.gi.appointmentservice.Model.DTO.RDVResponse;
 import com.gi.appointmentservice.Model.Entity.RendezVous;
@@ -26,12 +27,14 @@ public class RDVMapper {
     }
 
     // Entity + patient names → Response
-    public static RDVResponse toResponse(RendezVous rdv, String firstName, String lastName) {
+    public static RDVResponse toResponse(RendezVous rdv, PatientInfoDTO patientInfo) {
         RDVResponse dto = new RDVResponse();
         dto.setId(rdv.getId());
         dto.setPatientId(rdv.getPatientId());
-        dto.setPatientFirstName(firstName);
-        dto.setPatientLastName(lastName);
+        dto.setPrenom(patientInfo.getPrenom());
+        dto.setNom(patientInfo.getNom());
+        dto.setCin(patientInfo.getCin());
+        dto.setDateNaissance(patientInfo.getDateNaissance());
         dto.setCabinetId(rdv.getCabinetId());
         dto.setDate(rdv.getDate());
         dto.setHeure_debut(rdv.getHeure_debut());

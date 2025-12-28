@@ -3,6 +3,7 @@ import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.gi.appointmentservice.Mapper.RDVMapper;
+import com.gi.appointmentservice.Model.DTO.PatientInfoDTO;
 import com.gi.appointmentservice.Model.DTO.RDVRequest;
 import com.gi.appointmentservice.Model.DTO.RDVResponse;
 import com.gi.appointmentservice.Model.DTO.UpdateDto;
@@ -12,11 +13,17 @@ import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
 
+
+
 @Service
 @RequiredArgsConstructor
-public class RDVService {
 
-    private final RDVRepository rdvRepository;
+public class RDVService {
+    private  final RDVRepository rdvRepository;
+    private  final RDVMapper RDVMapper;
+    private final PatientClient patientClient;
+    private PatientInfoDTO patientInfo;
+    
 
     public RDVResponse createRendezVous(RDVRequest rdvreqDto) {
 
@@ -28,7 +35,8 @@ public class RDVService {
         RendezVous rdv = new RendezVous();
         rdv= RDVMapper.toEntity(rdvreqDto);
         rdvRepository.save(rdv);
-        return RDVMapper.toResponse(rdv, "Ikrame", "Gouaiche");
+        patientInfo = patientClient.getPatientById(rdv.getPatientId());
+        return RDVMapper.toResponse(rdv, patientInfo);
 
     }
 
@@ -41,7 +49,9 @@ public class RDVService {
         rdv.setMotifRDV(updateDto.getMotifRDV());
         rdv.setNotes(updateDto.getNotes());
         rdvRepository.save(rdv);
-        return RDVMapper.toResponse(rdv, "Ikrame", "Gouaiche"); // here we should retrieve actual patient names from Patient Service
+
+        patientInfo = patientClient.getPatientById(rdv.getPatientId());
+        return RDVMapper.toResponse(rdv, patientInfo);
     }
 
     public void deleteRendezVous(Long rdvId) {
@@ -51,7 +61,8 @@ public class RDVService {
     public RDVResponse getRendezVousById(Long rdvId) {
         RendezVous rdv = rdvRepository.findById(rdvId)
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + rdvId));
-        return RDVMapper.toResponse(rdv, "Ikrame", "Gouaiche"); // here we should retrieve actual patient names from Patient Service
+        patientInfo = patientClient.getPatientById(rdv.getPatientId());
+        return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient Service
     }
 
 

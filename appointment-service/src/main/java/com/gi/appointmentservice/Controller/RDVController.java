@@ -20,9 +20,14 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/appointments")
+@RequestMapping("/appointments")
 public class RDVController {
     private final RDVService rdvService;
+
+    @GetMapping("/")
+    public String welcome() {
+        return "Welcome to the Appointment Service!";
+    }
 
     @PostMapping("/rendezvous")
     public ResponseEntity<RDVResponse> createRendezVous(@RequestBody RDVRequest request) {
