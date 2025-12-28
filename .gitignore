@@ -46,3 +46,5 @@ backend-info-request.txt
 
 ### Spring Boot env ###
 env/*
+
+logs
