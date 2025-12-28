@@ -95,7 +95,7 @@ public class ConsultationGraphQLConnector {
 			return supplier.get();
 		} catch (ResponseStatusException ex) {
 			String message = ex.getReason() != null ? ex.getReason() : "Consultation introuvable";
-			throw new GraphQLException(message);
+			throw new GraphQLException(message, ex);
 		}
 	}
 	private void applyNotes(ConsultationDTO target, ConsultationNotesInput notes) {

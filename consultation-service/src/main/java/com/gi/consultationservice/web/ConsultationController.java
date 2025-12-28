@@ -4,7 +4,6 @@ import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
 import com.gi.consultationservice.service.ConsultationService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
