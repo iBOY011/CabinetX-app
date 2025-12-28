@@ -305,6 +305,7 @@ pipeline {
             '''
         }
     }
+    }
     
     post {
         always {
