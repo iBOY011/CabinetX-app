@@ -4,7 +4,7 @@ import java.time.LocalTime;
 
 
 public class Crenaux {
-    
+  
     Long id;
     Long cabinetId;
     LocalDate date;

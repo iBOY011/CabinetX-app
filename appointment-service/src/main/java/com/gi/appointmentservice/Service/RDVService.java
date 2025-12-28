@@ -8,6 +8,7 @@ import com.gi.appointmentservice.Model.DTO.RDVRequest;
 import com.gi.appointmentservice.Model.DTO.RDVResponse;
 import com.gi.appointmentservice.Model.DTO.UpdateDto;
 import com.gi.appointmentservice.Model.Entity.RendezVous;
+import com.gi.appointmentservice.Model.Enum.StatutRDV;
 import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,7 @@ public class RDVService {
         if(!rdvreqDto.getHeure_debut().isBefore(rdvreqDto.getHeure_fin())){
             throw new IllegalArgumentException("La date de début doit être avant la date de fin.");
         }
-        // 2. vérifier qu'il n'existe pas un rdv dans le même cabinet qui chevauche l'horaire
-        
+        // faut regle metier
         RendezVous rdv = new RendezVous();
         rdv= RDVMapper.toEntity(rdvreqDto);
         rdvRepository.save(rdv);
@@ -64,5 +64,33 @@ public class RDVService {
         patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient Service
     }
+
+
+    public RDVResponse updateStatusRendezVous(Long id, StatutRDV statut) {
+        RendezVous rdv = rdvRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + id));
+        if (rdv.getStatutRDV() == StatutRDV.ANNULE || rdv.getStatutRDV() == StatutRDV.TERMINE || rdv.getStatutRDV() == StatutRDV.MISSING) {
+            throw new IllegalArgumentException("Le statut ne peut pas être modifié.");
+        } 
+
+        if (rdv.getStatutRDV() == StatutRDV.EN_CONSULTATION && statut != StatutRDV.TERMINE) {
+            throw new IllegalArgumentException("Le statut ne peut être changé que vers TERMINE .");
+        }
+        if (rdv.getStatutRDV() == StatutRDV.CONFIRME && statut == StatutRDV.TERMINE) {
+            throw new IllegalArgumentException("Le statut ne peut pas être changé directement de CONFIRME à TERMINE.");
+        }
+        rdv.setStatutRDV(statut);
+        
+        rdvRepository.save(rdv);
+        return RDVMapper.toResponse(rdv, "Ikrame", "Gouaiche");      
+    }
+
+
+
+
+
+
+
+    
 
 }
