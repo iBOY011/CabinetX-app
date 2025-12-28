@@ -37,6 +37,19 @@ pipeline {
             }
         }
         
+        stage('Build and Start Configuration Service') {
+            steps {
+                dir('configuration-service') {
+                    sh '''
+                        mvn clean package -DskipTests --batch-mode --no-transfer-progress
+                        nohup java -jar target/*.jar > config-server.log 2>&1 &
+                        echo $! > config-server.pid
+                        sleep 30
+                    '''
+                }
+            }
+        }
+        
         // BUILD EN SÉQUENTIEL PAR GROUPES - CRITIQUE POUR 4GB RAM
         stage('Build Group 1 - Core Services') {
             steps {
@@ -46,7 +59,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
-    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -66,7 +79,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
-    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -91,7 +104,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
-    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -115,7 +128,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
-    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -140,7 +153,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
-    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -280,6 +293,17 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    
+    stage('Stop Configuration Service') {
+        steps {
+            sh '''
+                if [ -f configuration-service/config-server.pid ]; then
+                    kill $(cat configuration-service/config-server.pid) || true
+                    rm configuration-service/config-server.pid
+                fi
+            '''
         }
     }
     
