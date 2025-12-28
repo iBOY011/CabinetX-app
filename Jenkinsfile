@@ -46,6 +46,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -65,6 +66,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -89,6 +91,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -112,6 +115,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -136,6 +140,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
