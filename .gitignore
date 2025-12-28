@@ -48,3 +48,4 @@ backend-info-request.txt
 env/*
 
 logs
+configuration-service/src/main/resources/application.properties
