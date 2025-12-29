@@ -3,6 +3,9 @@ pipeline {
     
     environment {
         SONAR_TOKEN = credentials('sonar-token')
+        CONFIG_GIT_USERNAME = credentials('config-git-username')
+        CONFIG_GIT_PASSWORD = credentials('config-git-password')
+        // Add other sensitive env vars here, e.g., DATABASE_PASSWORD = credentials('db-password')
         // Optimisé pour serveur 4GB avec SonarQube
         MAVEN_OPTS = "-Xms64m -Xmx384m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -Djava.awt.headless=true"
         MAVEN_CONFIG = "-Dmaven.repo.local=.m2/repository"
@@ -34,6 +37,19 @@ pipeline {
             }
         }
         
+        stage('Build and Start Configuration Service') {
+            steps {
+                dir('configuration-service') {
+                    sh '''
+                        mvn clean package -DskipTests --batch-mode --no-transfer-progress
+                        nohup java -jar target/*.jar > config-server.log 2>&1 &
+                        echo $! > config-server.pid
+                        sleep 30
+                    '''
+                }
+            }
+        }
+        
         // BUILD EN SÉQUENTIEL PAR GROUPES - CRITIQUE POUR 4GB RAM
         stage('Build Group 1 - Core Services') {
             steps {
@@ -43,6 +59,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -62,6 +79,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -86,6 +104,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -109,6 +128,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -133,6 +153,7 @@ pipeline {
                         dir(service) {
                             sh '''
                                 mvn clean verify -Ddependency-check.skip=true \
+    -Dspring.cloud.config.enabled=true \
                                     -DskipTests=false \
                                     -T 1C \
                                     --batch-mode \
@@ -273,6 +294,17 @@ pipeline {
                 }
             }
         }
+    
+    stage('Stop Configuration Service') {
+        steps {
+            sh '''
+                if [ -f configuration-service/config-server.pid ]; then
+                    kill $(cat configuration-service/config-server.pid) || true
+                    rm configuration-service/config-server.pid
+                fi
+            '''
+        }
+    }
     }
     
     post {
