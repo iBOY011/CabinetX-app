@@ -80,7 +80,7 @@ function Start-ServiceProcess {
 
         $logFile = Join-Path $logPath "$ServiceName.log"
         $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-        $startInfo.FileName = "mvn"
+        $startInfo.FileName = "mvnw.cmd"
         $startInfo.Arguments = "spring-boot:run"
         $startInfo.WorkingDirectory = $servicePath
         $startInfo.UseShellExecute = $false
@@ -180,8 +180,12 @@ Write-ColorOutput "==============================" $Cyan
 # Check all services
 $failedServices = @()
 foreach ($service in $services) {
-    if (!(Test-ServiceRunning $service.Name)) {
+    $procInfo = $runningProcesses | Where-Object { $_.Name -eq $service.Name }
+    if ($procInfo -and -not $procInfo.Process.HasExited) {
+        Write-ColorOutput "✅ $($service.Name) is running" $Green
+    } else {
         $failedServices += $service.Name
+        Write-ColorOutput "❌ $($service.Name) is not running" $Red
     }
 }
 
