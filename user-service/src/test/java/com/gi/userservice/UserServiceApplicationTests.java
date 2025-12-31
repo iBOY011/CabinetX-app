@@ -8,7 +8,8 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest(classes = UserServiceApplication.class)
 @TestPropertySource(properties = {
     "spring.cloud.config.enabled=false",
-    "eureka.client.enabled=false"
+    "eureka.client.enabled=false",
+    "security.enabled=false"
 })
 class UserServiceApplicationTests {
 
