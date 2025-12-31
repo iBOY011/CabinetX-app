@@ -34,12 +34,10 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/actuator/**", "/favicon.ico", "/CONSULTATION-SERVICE/**").permitAll()
-                        .anyExchange().authenticated()
-                )
+                        .pathMatchers("/actuator/**", "/favicon.ico", "/api/**").permitAll()
+                        .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                )
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .build();
     }
 
@@ -59,7 +57,8 @@ public class SecurityConfig {
             Set<GrantedAuthority> authorities = new HashSet<>();
 
             Collection<GrantedAuthority> scopeAuth = scopes.convert(jwt);
-            if (scopeAuth != null) authorities.addAll(scopeAuth);
+            if (scopeAuth != null)
+                authorities.addAll(scopeAuth);
 
             Object realmAccessObj = jwt.getClaims().get("realm_access");
             if (realmAccessObj instanceof Map<?, ?> realmAccess) {
@@ -76,18 +75,19 @@ public class SecurityConfig {
             return authorities;
         });
 
-        // Adapte Converter<Jwt, AbstractAuthenticationToken> -> Converter<Jwt, Mono<AbstractAuthenticationToken>>
+        // Adapte Converter<Jwt, AbstractAuthenticationToken> -> Converter<Jwt,
+        // Mono<AbstractAuthenticationToken>>
         return new ReactiveJwtAuthenticationConverterAdapter(delegate);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of("*"));
+        cfg.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:4200"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setExposedHeaders(List.of("*"));
-        cfg.setAllowCredentials(false);
+        cfg.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
