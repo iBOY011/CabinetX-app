@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface PatientEventRepository extends JpaRepository<PatientEvent, Long> {
     List<PatientEvent> findByPatientId(Long patientId);
+
+    void deleteByPatientId(Long patientId);
 }

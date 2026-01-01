@@ -1,4 +1,5 @@
 package com.gi.appointmentservice.Model.Entity;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -15,7 +16,6 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 
 @Entity
 @Data
@@ -50,8 +50,5 @@ public class RendezVous {
     private Long cabinetId;
 
     private String notes;
-
-
-
 
 }
