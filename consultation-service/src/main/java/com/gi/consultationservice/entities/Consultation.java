@@ -1,6 +1,7 @@
 package com.gi.consultationservice.entities;
 
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 import com.gi.consultationservice.enums.ConsultationType;
 
@@ -64,4 +65,10 @@ public class Consultation {
 
     @Column(length = 2000)
     private String observations;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean archived = false;
+
+    @Column(name = "archived_at")
+    private ZonedDateTime archivedAt;
 }

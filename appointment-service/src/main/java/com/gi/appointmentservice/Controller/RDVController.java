@@ -52,6 +52,12 @@ public class RDVController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/patients/{patientId}/today")
+    public ResponseEntity<RDVResponse> getTodayRendezVousForPatient(@PathVariable Long patientId) {
+        RDVResponse response = rdvService.getTodayRendezVousForPatient(patientId);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/update/{id}")
     public ResponseEntity<RDVResponse> updateRendezVous(@PathVariable Long id, @RequestBody UpdateDto request) {
         RDVResponse response = rdvService.updateRendezVous(id, request);

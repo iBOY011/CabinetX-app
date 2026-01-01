@@ -36,6 +36,7 @@ public class ConsultationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ConsultationDTO creerConsultation(@RequestBody @Valid ConsultationDTO dto) {
+        System.out.println("dto: "+dto.toString());
         return consultationService.creerConsultation(dto);
     }
 

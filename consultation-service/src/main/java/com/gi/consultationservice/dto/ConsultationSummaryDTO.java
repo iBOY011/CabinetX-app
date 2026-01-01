@@ -1,6 +1,7 @@
 package com.gi.consultationservice.dto;
 
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 import com.gi.consultationservice.enums.ConsultationType;
 
@@ -20,4 +21,6 @@ public class ConsultationSummaryDTO {
     private String diagnostic;
     private String traitement;
     private String observations;
+    private Boolean archived;
+    private ZonedDateTime archivedAt;
 }

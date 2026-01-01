@@ -36,8 +36,10 @@ public class ConsultationService {
         this.consultationMapper = consultationMapper;
     }
 
-    public ConsultationDTO creerConsultation(ConsultationDTO dto) {
+    public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
         Consultation consultation = consultationMapper.toEntity(dto);
+        System.out.println(dto);
+        System.out.println(consultation);
         consultation.setId(null);
         Consultation saved = consultationRepository.save(consultation);
         enregistrerCreation(saved);
@@ -109,6 +111,8 @@ public class ConsultationService {
         consultation.setDiagnostic(dto.getDiagnostic());
         consultation.setTraitement(dto.getTraitement());
         consultation.setObservations(dto.getObservations());
+        consultation.setArchived(dto.getArchived());
+        consultation.setArchivedAt(dto.getArchivedAt());
     }
 
     private void enregistrerCreation(Consultation consultation) {

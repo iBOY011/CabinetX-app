@@ -1,4 +1,7 @@
 package com.gi.appointmentservice.Service;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.springframework.context.annotation.Bean;
@@ -66,6 +69,15 @@ public class RDVService {
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + rdvId));
         patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient Service
+    }
+
+    public RDVResponse getTodayRendezVousForPatient(Long patientId) {
+        List<StatutRDV> validStatuts = Arrays.asList(StatutRDV.CONFIRME, StatutRDV.EN_CONSULTATION);
+        RendezVous rdv = rdvRepository.findFirstValidToday(patientId, LocalDate.now(), validStatuts)
+                .orElseThrow(() -> new ResourceNotFoundException("Aucun rendez-vous valide aujourd'hui pour le patient: " + patientId));
+
+        patientInfo = patientClient.getPatientById(rdv.getPatientId());
+        return RDVMapper.toResponse(rdv, patientInfo);
     }
 
     @Bean
