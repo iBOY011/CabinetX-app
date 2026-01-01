@@ -17,7 +17,7 @@ spring:
             - id: appointment-service
               uri: lb://APPOINTMENT-SERVICE
               predicates:
-                - Path= /appointments/**
+                - Path= /api/appointments/**
 
             - id: analytics-service
               uri: lb://ANALYTICS-SERVICE

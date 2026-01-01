@@ -1,5 +1,8 @@
 package com.gi.appointmentservice.Controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gi.appointmentservice.Model.DTO.RDVRequest;
@@ -22,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/appointments")
+@RequestMapping("/api/appointments")
 public class RDVController {
 
     private final RDVService rdvService;
@@ -32,16 +36,16 @@ public class RDVController {
     @GetMapping("/")
     public String welcome() {
         String message = "Welcome endpoint called!";
-        
+
         // Publish message to Kafka
         streamBridge.send("queue-topic", message);
-        
+
         return "Welcome to the Appointment Service!";
     }
 
     @PostMapping("/rendezvous")
     public ResponseEntity<RDVResponse> createRendezVous(@RequestBody RDVRequest request) {
-        
+
         RDVResponse response = rdvService.createRendezVous(request);
         return ResponseEntity.ok(response);
     }
@@ -70,6 +74,12 @@ public class RDVController {
         return ResponseEntity.ok(response);
     }
 
-
+    @GetMapping("/by-date")
+    public ResponseEntity<List<RDVResponse>> getAppointmentsByDate(
+            @RequestParam LocalDate date,
+            @RequestParam Long cabinetId) {
+        List<RDVResponse> appointments = rdvService.getAppointmentsByDate(date, cabinetId);
+        return ResponseEntity.ok(appointments);
+    }
 
 }

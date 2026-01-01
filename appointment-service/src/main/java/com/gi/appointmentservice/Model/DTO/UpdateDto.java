@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class UpdateDto {
-    
+
     private LocalDate date;
     private LocalTime Heure_debut;
     private LocalTime Heure_fin;
