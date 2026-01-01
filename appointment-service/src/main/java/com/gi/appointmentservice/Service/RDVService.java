@@ -19,27 +19,24 @@ import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
 
-
-
 @Service
 @RequiredArgsConstructor
 
 public class RDVService {
-    private  final RDVRepository rdvRepository;
-    private  final RDVMapper RDVMapper;
+    private final RDVRepository rdvRepository;
+    private final RDVMapper RDVMapper;
     private final PatientClient patientClient;
     private PatientInfoDTO patientInfo;
-    
 
     public RDVResponse createRendezVous(RDVRequest rdvreqDto) {
 
         // 1. date début < date fin
-        if(!rdvreqDto.getHeure_debut().isBefore(rdvreqDto.getHeure_fin())){
+        if (!rdvreqDto.getHeure_debut().isBefore(rdvreqDto.getHeure_fin())) {
             throw new IllegalArgumentException("La date de début doit être avant la date de fin.");
         }
         // faut regle metier
         RendezVous rdv = new RendezVous();
-        rdv= RDVMapper.toEntity(rdvreqDto);
+        rdv = RDVMapper.toEntity(rdvreqDto);
         rdvRepository.save(rdv);
         patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo);
@@ -68,7 +65,8 @@ public class RDVService {
         RendezVous rdv = rdvRepository.findById(rdvId)
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + rdvId));
         patientInfo = patientClient.getPatientById(rdv.getPatientId());
-        return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient Service
+        return RDVMapper.toResponse(rdv, patientInfo); // here we should retrieve actual patient names from Patient
+                                                       // Service
     }
 
     public RDVResponse getTodayRendezVousForPatient(Long patientId) {
@@ -91,13 +89,13 @@ public class RDVService {
         };
     }
 
-
     public RDVResponse updateStatusRendezVous(Long id, StatutRDV statut) {
         RendezVous rdv = rdvRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + id));
-        if (rdv.getStatutRDV() == StatutRDV.ANNULE || rdv.getStatutRDV() == StatutRDV.TERMINE || rdv.getStatutRDV() == StatutRDV.MISSING) {
+        if (rdv.getStatutRDV() == StatutRDV.ANNULE || rdv.getStatutRDV() == StatutRDV.TERMINE
+                || rdv.getStatutRDV() == StatutRDV.MISSING) {
             throw new IllegalArgumentException("Le statut ne peut pas être modifié.");
-        } 
+        }
 
         if (rdv.getStatutRDV() == StatutRDV.EN_CONSULTATION && statut != StatutRDV.TERMINE) {
             throw new IllegalArgumentException("Le statut ne peut être changé que vers TERMINE .");
@@ -106,20 +104,22 @@ public class RDVService {
             throw new IllegalArgumentException("Le statut ne peut pas être changé directement de CONFIRME à TERMINE.");
         }
         rdv.setStatutRDV(statut);
-        
+
         rdvRepository.save(rdv);
         PatientInfoDTO patientInfo = new PatientInfoDTO();
         patientInfo.setPrenom("Ikrame");
         patientInfo.setNom("Gouaiche");
-        return RDVMapper.toResponse(rdv, patientInfo);      
+        return RDVMapper.toResponse(rdv, patientInfo);
     }
 
-
-
-
-
-
-
-    
+    public List<RDVResponse> getAppointmentsByDate(LocalDate date, Long cabinetId) {
+        List<RendezVous> rendezVousList = rdvRepository.findByDateAndCabinetId(date, cabinetId);
+        return rendezVousList.stream()
+                .map(rdv -> {
+                    PatientInfoDTO patientInfo = patientClient.getPatientById(rdv.getPatientId());
+                    return RDVMapper.toResponse(rdv, patientInfo);
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
 
 }

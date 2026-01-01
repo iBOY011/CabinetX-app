@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.gi.consultationservice.entities.Consultation;
 
-public interface ConsultationRepository extends JpaRepository<Consultation, Long> {
+public interface ConsultationRepository extends JpaRepository<Consultation, Long>, JpaSpecificationExecutor<Consultation> {
 
     List<Consultation> findByPatientIdOrderByDateConsultationDesc(Long patientId);
 

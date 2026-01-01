@@ -3,7 +3,16 @@ package com.gi.consultationservice.service;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.OptionalLong;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,9 +21,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
+import com.gi.consultationservice.dto.MedecinWeeklyStatsDTO;
+import com.gi.consultationservice.dto.DailyStatDTO;
 import com.gi.consultationservice.entities.Consultation;
 import com.gi.consultationservice.entities.ConsultationCreatedEvent;
+import com.gi.consultationservice.enums.ConsultationType;
 import com.gi.consultationservice.mappers.ConsultationMapper;
+import com.gi.consultationservice.messaging.OrdonnanceCountClient;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
 
@@ -27,13 +40,16 @@ public class ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final ConsultationEventRepository eventRepository;
     private final ConsultationMapper consultationMapper;
+    private final OrdonnanceCountClient ordonnanceCountClient;
 
     public ConsultationService(ConsultationRepository consultationRepository,
                                ConsultationEventRepository eventRepository,
-                               ConsultationMapper consultationMapper) {
+                               ConsultationMapper consultationMapper,
+                               OrdonnanceCountClient ordonnanceCountClient) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
+        this.ordonnanceCountClient = ordonnanceCountClient;
     }
 
     public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
@@ -78,6 +94,14 @@ public class ConsultationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ConsultationSummaryDTO> listerRecentsParMedecin(Long medecinId, int limit) {
+        int effectiveLimit = Math.max(limit, 1);
+        Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by(Sort.Order.desc("dateConsultation")));
+        Page<Consultation> page = consultationRepository.findAll(specMedecin(medecinId), pageable);
+        return consultationMapper.toSummaryList(page.getContent());
+    }
+
+    @Transactional(readOnly = true)
     public List<ConsultationSummaryDTO> listerParMedecinEtJour(Long medecinId, LocalDate date) {
         OffsetDateTime debut = date.atStartOfDay().atOffset(DEFAULT_ZONE_OFFSET);
         OffsetDateTime fin = date.plusDays(1).atStartOfDay().minusNanos(1).atOffset(DEFAULT_ZONE_OFFSET);
@@ -92,6 +116,74 @@ public class ConsultationService {
                 debut,
                 fin);
         return consultationMapper.toSummaryList(consultations);
+    }
+
+        @Transactional(readOnly = true)
+        public MedecinWeeklyStatsDTO statsMedecinWeekly(Long medecinId,
+                                Long cabinetId,
+                                LocalDate startDate,
+                                LocalDate endDate) {
+        LocalDate start = startDate != null
+            ? startDate
+            : LocalDate.now(DEFAULT_ZONE_OFFSET).with(java.time.DayOfWeek.MONDAY);
+        LocalDate end = endDate != null ? endDate : start.plusDays(6);
+        if (end.isBefore(start)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endDate doit être après startDate");
+        }
+
+        OffsetDateTime debut = start.atStartOfDay().atOffset(DEFAULT_ZONE_OFFSET);
+        OffsetDateTime fin = end.plusDays(1).atStartOfDay().minusNanos(1).atOffset(DEFAULT_ZONE_OFFSET);
+
+        Specification<Consultation> spec = Specification.where(specMedecin(medecinId))
+            .and(cabinetId != null ? specCabinet(cabinetId) : null)
+            .and(specDateBetween(debut, fin));
+
+        List<Consultation> consultations = consultationRepository.findAll(spec, Sort.by(Sort.Order.asc("dateConsultation")));
+
+        Map<LocalDate, Long> perDay = consultations.stream()
+            .collect(Collectors.groupingBy(c -> c.getDateConsultation().toLocalDate(), Collectors.counting()));
+
+        List<DailyStatDTO> daily = new ArrayList<>();
+        for (LocalDate cursor = start; !cursor.isAfter(end); cursor = cursor.plusDays(1)) {
+            long dayConsultations = perDay.getOrDefault(cursor, 0L);
+            daily.add(DailyStatDTO.builder()
+                .date(cursor)
+                .consultations(dayConsultations)
+                .ordonnances(0L) // Ordonnances non gérées ici; intégrer un service dédié si disponible
+                .presenceRate(dayConsultations > 0 ? 100.0 : 0.0)
+                .build());
+        }
+
+        long consultationsCount = consultations.size();
+        OptionalLong ordonnancesCountOptional = ordonnanceCountClient.getCountOrRequest(medecinId, cabinetId, debut, fin);
+        long ordonnancesCount = ordonnancesCountOptional.orElse(-1L);
+        double presenceRate = consultationsCount > 0 ? 100.0 : 0.0;
+
+        return MedecinWeeklyStatsDTO.builder()
+            .medecinId(medecinId)
+            .cabinetId(cabinetId)
+            .start(debut)
+            .end(fin)
+            .consultationsCount(consultationsCount)
+            .ordonnancesCount(ordonnancesCount)
+            .presenceRate(presenceRate)
+            .daily(daily)
+            .build();
+        }
+
+    @Transactional(readOnly = true)
+    public Page<ConsultationSummaryDTO> listerParMedecinPaged(Long medecinId,
+                                                             Long patientId,
+                                                             Boolean archived,
+                                                             ConsultationType type,
+                                                             Pageable pageable) {
+        Specification<Consultation> spec = Specification.where(specMedecin(medecinId))
+                .and(patientId != null ? specPatient(patientId) : null)
+                .and(archived != null ? specArchived(archived) : null)
+                .and(type != null ? specType(type) : null);
+
+        Page<Consultation> page = consultationRepository.findAll(spec, pageable);
+        return page.map(consultationMapper::toSummary);
     }
 
     private Consultation chargerConsultation(Long id) {
@@ -123,5 +215,29 @@ public class ConsultationService {
                 .rendezVousId(consultation.getRendezVousId())
                 .dateConsultation(consultation.getDateConsultation())
                 .build());
+    }
+
+    private Specification<Consultation> specMedecin(Long medecinId) {
+        return (root, query, cb) -> cb.equal(root.get("medecinId"), medecinId);
+    }
+
+    private Specification<Consultation> specCabinet(Long cabinetId) {
+        return (root, query, cb) -> cb.equal(root.get("cabinetId"), cabinetId);
+    }
+
+    private Specification<Consultation> specPatient(Long patientId) {
+        return (root, query, cb) -> cb.equal(root.get("patientId"), patientId);
+    }
+
+    private Specification<Consultation> specArchived(Boolean archived) {
+        return (root, query, cb) -> cb.equal(root.get("archived"), archived);
+    }
+
+    private Specification<Consultation> specType(ConsultationType type) {
+        return (root, query, cb) -> cb.equal(root.get("type"), type);
+    }
+
+    private Specification<Consultation> specDateBetween(OffsetDateTime debut, OffsetDateTime fin) {
+        return (root, query, cb) -> cb.between(root.get("dateConsultation"), debut, fin);
     }
 }

@@ -24,8 +24,8 @@ public class PatientService {
     private final PatientMapper patientMapper;
 
     public PatientService(PatientRepository patientRepository,
-                          PatientEventRepository patientEventRepository,
-                          PatientMapper patientMapper) {
+            PatientEventRepository patientEventRepository,
+            PatientMapper patientMapper) {
         this.patientRepository = patientRepository;
         this.patientEventRepository = patientEventRepository;
         this.patientMapper = patientMapper;
@@ -49,8 +49,8 @@ public class PatientService {
 
     public void deletePatient(Long id) {
         Patient existing = getPatientEntity(id);
+        patientEventRepository.deleteByPatientId(id);
         patientRepository.delete(existing);
-        recordEvent(id, EventType.DELETED);
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +62,8 @@ public class PatientService {
     public PatientDTO getPatientByCin(String cin) {
         return patientRepository.findByCin(cin)
                 .map(patientMapper::toDTO)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient introuvable pour le CIN fourni"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Patient introuvable pour le CIN fourni"));
     }
 
     @Transactional(readOnly = true)
