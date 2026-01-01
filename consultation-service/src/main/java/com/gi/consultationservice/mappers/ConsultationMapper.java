@@ -62,6 +62,8 @@ public class ConsultationMapper {
                 .dateConsultation(entity.getDateConsultation())
                 .type(entity.getType())
                 .diagnostic(entity.getDiagnostic())
+                .traitement(entity.getTraitement())
+                .observations(entity.getObservations())
                 .build();
     }
 

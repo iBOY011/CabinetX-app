@@ -51,7 +51,6 @@ public class ConsultationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
     public ConsultationDTO trouverParId(@PathVariable Long id) {
         return consultationService.trouverParId(id);
     }

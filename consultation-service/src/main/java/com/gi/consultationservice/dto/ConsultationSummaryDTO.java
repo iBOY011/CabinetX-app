@@ -18,4 +18,6 @@ public class ConsultationSummaryDTO {
     private OffsetDateTime dateConsultation;
     private ConsultationType type;
     private String diagnostic;
+    private String traitement;
+    private String observations;
 }
