@@ -11,6 +11,7 @@ public class ClinicMapper {
         if (request == null)
             return null;
         Clinic clinic = new Clinic();
+        clinic.setId(request.getId());
         clinic.setName(request.getName());
         clinic.setSpecialty(request.getSpecialty());
         clinic.setPhone(request.getPhone());
@@ -25,6 +26,7 @@ public class ClinicMapper {
         if (entity == null)
             return null;
         ClinicDTO response = new ClinicDTO();
+        response.setId(entity.getId());
         response.setName(entity.getName());
         response.setSpecialty(entity.getSpecialty());
         response.setPhone(entity.getPhone());
@@ -38,6 +40,7 @@ public class ClinicMapper {
     public void updateEntity(ClinicDTO request, Clinic entity) {
         if (request == null || entity == null)
             return;
+        // Don't set ID when updating - keep the existing entity's ID
         entity.setName(request.getName());
         entity.setSpecialty(request.getSpecialty());
         entity.setPhone(request.getPhone());

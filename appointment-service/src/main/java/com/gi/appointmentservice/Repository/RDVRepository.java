@@ -19,4 +19,10 @@ public interface RDVRepository extends JpaRepository<RendezVous, Long> {
 
     List<RendezVous> findByDateAndCabinetId(LocalDate date, Long cabinetId);
 
+    // Queue management queries
+    List<RendezVous> findByCabinetIdAndDateAndStatutRDV(Long cabinetId, LocalDate date, StatutRDV statutRDV);
+
+    @Query("SELECT MAX(r.queuePosition) FROM RendezVous r WHERE r.cabinetId = :cabinetId AND r.date = :date AND r.statutRDV = 'EN_ATTENTE'")
+    Integer findMaxQueuePositionByCabinetAndDate(@Param("cabinetId") Long cabinetId, @Param("date") LocalDate date);
+
 }

@@ -31,6 +31,12 @@ public class UserController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> dtos = userService.findAll();
+        return ResponseEntity.ok(dtos);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO dto) {
         UserDTO updated = userService.updateUser(id, dto);

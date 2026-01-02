@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -25,4 +26,5 @@ public class PatientDTO {
     private TypeMutuelle typeMutuelle;
     private Long cabinetId;
     private Adresse adresse;
+    private LocalDateTime createdAt;
 }
