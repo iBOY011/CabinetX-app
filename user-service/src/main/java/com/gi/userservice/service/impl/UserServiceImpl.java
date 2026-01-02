@@ -95,10 +95,10 @@ public class UserServiceImpl implements UserService {
                 .map(user -> {
                     UserDTO dto = mapToDTO(user);
                     // Set clinicId from profile
-                    if (user.getRole() == UserRole.DOCTOR) {
+                    if (user.getRole() == UserRole.MEDCIN) {
                         doctorProfileRepository.findByUserId(user.getId())
                                 .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-                    } else if (user.getRole() == UserRole.SECRETARY) {
+                    } else if (user.getRole() == UserRole.SECRETAIRE) {
                         secretaryProfileRepository.findByUserId(user.getId())
                                 .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
                     }
