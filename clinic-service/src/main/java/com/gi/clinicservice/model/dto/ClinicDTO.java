@@ -15,6 +15,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ClinicDTO {
 
+    private Long id;
+
     @NotBlank
     private String name;
 

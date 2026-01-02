@@ -1,9 +1,10 @@
 package com.gi.userservice.model.dto.request;
 
+import com.gi.userservice.model.enums.UserRole;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.gi.userservice.model.enums.UserRole;
 
 @Data
 @NoArgsConstructor

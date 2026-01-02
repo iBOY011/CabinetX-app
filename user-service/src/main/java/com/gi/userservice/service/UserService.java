@@ -12,6 +12,8 @@ public interface UserService {
 
     UserDTO findById(Long id);
 
+    List<UserDTO> findAll();
+
     UserDTO updateUser(Long id, UserDTO dto);
 
     UserDTO activateUser(Long id);
