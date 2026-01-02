@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 public class QueueService {
 
     private final RDVRepository rdvRepository;
-    private final RDVMapper rdvMapper;
     private final PatientClient patientClient;
 
     /**
@@ -44,7 +43,7 @@ public class QueueService {
         return queueAppointments.stream()
                 .map(rdv -> {
                     var patientInfo = patientClient.getPatientById(rdv.getPatientId());
-                    return rdvMapper.toResponse(rdv, patientInfo);
+                    return RDVMapper.toResponse(rdv, patientInfo);
                 })
                 .collect(Collectors.toList());
     }
@@ -73,7 +72,7 @@ public class QueueService {
         
         RendezVous saved = rdvRepository.save(rdv);
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
-        return rdvMapper.toResponse(saved, patientInfo);
+        return RDVMapper.toResponse(saved, patientInfo);
     }
 
     /**
@@ -100,7 +99,7 @@ public class QueueService {
         }
 
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
-        return rdvMapper.toResponse(saved, patientInfo);
+        return RDVMapper.toResponse(saved, patientInfo);
     }
 
     /**
@@ -127,7 +126,7 @@ public class QueueService {
         }
 
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
-        return rdvMapper.toResponse(saved, patientInfo);
+        return RDVMapper.toResponse(saved, patientInfo);
     }
 
     /**

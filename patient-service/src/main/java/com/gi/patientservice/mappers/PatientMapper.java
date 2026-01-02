@@ -27,6 +27,7 @@ public class PatientMapper {
                 .typeMutuelle(dto.getTypeMutuelle())
                 .cabinetId(dto.getCabinetId())
                 .adresse(dto.getAdresse())
+                .createdAt(dto.getCreatedAt())
                 .build();
     }
 
@@ -45,6 +46,7 @@ public class PatientMapper {
                 .typeMutuelle(entity.getTypeMutuelle())
                 .cabinetId(entity.getCabinetId())
                 .adresse(entity.getAdresse())
+                .createdAt(entity.getCreatedAt())
                 .build();
     }
 
