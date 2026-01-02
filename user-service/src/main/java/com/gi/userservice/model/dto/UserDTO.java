@@ -11,6 +11,7 @@ import com.gi.userservice.model.enums.UserRole;
 public class UserDTO {
 
     private Long id;
+    private String keycloakUserId;
     private String firstName;
     private String lastName;
     private String login;

@@ -94,10 +94,17 @@ public class ConsultationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ConsultationDTO> listerToutes() {
+        List<Consultation> consultations = consultationRepository.findAll(Sort.by(Sort.Order.desc("dateConsultation")));
+        return consultationMapper.toDTOList(consultations);
+    }
+
+    @Transactional(readOnly = true)
     public List<ConsultationSummaryDTO> listerRecentsParMedecin(Long medecinId, int limit) {
         int effectiveLimit = Math.max(limit, 1);
         Pageable pageable = PageRequest.of(0, effectiveLimit, Sort.by(Sort.Order.desc("dateConsultation")));
         Page<Consultation> page = consultationRepository.findAll(specMedecin(medecinId), pageable);
+        System.out.println(page);
         return consultationMapper.toSummaryList(page.getContent());
     }
 

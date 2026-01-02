@@ -11,11 +11,14 @@ import com.gi.userservice.model.enums.UserRole;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class    User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "keycloak_user_id", unique = true)
+    private String keycloakUserId;
 
     @Column(nullable = false)
     private String firstName;

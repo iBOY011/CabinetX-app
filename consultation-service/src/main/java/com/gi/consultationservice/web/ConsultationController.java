@@ -67,6 +67,11 @@ public class ConsultationController {
         return consultationService.trouverParRendezVous(rendezVousId);
     }
 
+    @GetMapping
+    public List<ConsultationDTO> listerToutes() {
+        return consultationService.listerToutes();
+    }
+
     @GetMapping("/patients/{patientId}/historique")
     public List<ConsultationSummaryDTO> historiquePatient(@PathVariable Long patientId) {
         return consultationService.listerParPatient(patientId);

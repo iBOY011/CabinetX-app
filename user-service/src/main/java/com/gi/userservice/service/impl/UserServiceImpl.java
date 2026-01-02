@@ -1,5 +1,12 @@
 package com.gi.userservice.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.gi.userservice.keycloak.KeycloakAdminClient;
 import com.gi.userservice.model.dto.UserDTO;
 import com.gi.userservice.model.dto.request.CreateUserRequest;
 import com.gi.userservice.model.entity.DoctorProfile;
@@ -10,12 +17,8 @@ import com.gi.userservice.repository.DoctorProfileRepository;
 import com.gi.userservice.repository.SecretaryProfileRepository;
 import com.gi.userservice.repository.UserRepository;
 import com.gi.userservice.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +27,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final SecretaryProfileRepository secretaryProfileRepository;
+    private final KeycloakAdminClient keycloakAdminClient;
 
     @Override
     @Transactional
     public UserDTO createUser(CreateUserRequest request) {
+        String keycloakUserId = null;
+        if (keycloakAdminClient.isEnabled()) {
+            keycloakUserId = keycloakAdminClient.createUser(request);
+        }
+
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -36,16 +45,23 @@ public class UserServiceImpl implements UserService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setRole(request.getRole());
         user.setActive(true);
+        user.setKeycloakUserId(keycloakUserId);
 
-        User savedUser = userRepository.save(user);
+        User savedUser;
+        try {
+            savedUser = userRepository.save(user);
+        } catch (RuntimeException ex) {
+            keycloakAdminClient.deleteUser(keycloakUserId);
+            throw ex;
+        }
 
         // Create profile based on role
-        if (request.getRole() == UserRole.DOCTOR) {
+        if (request.getRole() == UserRole.MEDCIN) {
             DoctorProfile profile = new DoctorProfile();
             profile.setUserId(savedUser.getId());
             profile.setClinicId(request.getClinicId()); // Assuming clinicId in request
             doctorProfileRepository.save(profile);
-        } else if (request.getRole() == UserRole.SECRETARY) {
+        } else if (request.getRole() == UserRole.SECRETAIRE) {
             SecretaryProfile profile = new SecretaryProfile();
             profile.setUserId(savedUser.getId());
             profile.setClinicId(request.getClinicId());
@@ -63,10 +79,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         UserDTO dto = mapToDTO(user);
         // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
+        if (user.getRole() == UserRole.MEDCIN) {
             doctorProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
+        } else if (user.getRole() == UserRole.SECRETAIRE) {
             secretaryProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
         }
@@ -97,10 +113,10 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         UserDTO dto = mapToDTO(saved);
         // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
+        if (user.getRole() == UserRole.MEDCIN) {
             doctorProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
+        } else if (user.getRole() == UserRole.SECRETAIRE) {
             secretaryProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
         }
@@ -116,10 +132,10 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         UserDTO dto = mapToDTO(saved);
         // Set clinicId from profile
-        if (user.getRole() == UserRole.DOCTOR) {
+        if (user.getRole() == UserRole.MEDCIN) {
             doctorProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
-        } else if (user.getRole() == UserRole.SECRETARY) {
+        } else if (user.getRole() == UserRole.SECRETAIRE) {
             secretaryProfileRepository.findByUserId(user.getId())
                     .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
         }
@@ -155,6 +171,7 @@ public class UserServiceImpl implements UserService {
     private UserDTO mapToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
+        dto.setKeycloakUserId(user.getKeycloakUserId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setLogin(user.getLogin());

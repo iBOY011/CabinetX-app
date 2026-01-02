@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/actuator/**", "/favicon.ico", "/api/**").permitAll()
+                        .pathMatchers("/actuator/**", "/favicon.ico", "/api/**", "/USER-SERVICE/**").permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
