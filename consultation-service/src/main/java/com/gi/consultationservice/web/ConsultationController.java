@@ -2,8 +2,14 @@ package com.gi.consultationservice.web;
 
 import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
+import com.gi.consultationservice.dto.MedecinWeeklyStatsDTO;
+import com.gi.consultationservice.enums.ConsultationType;
 import com.gi.consultationservice.service.ConsultationService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -36,6 +42,7 @@ public class ConsultationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ConsultationDTO creerConsultation(@RequestBody @Valid ConsultationDTO dto) {
+        System.out.println("dto: "+dto.toString());
         return consultationService.creerConsultation(dto);
     }
 
@@ -78,8 +85,46 @@ public class ConsultationController {
         return consultationService.listerParMedecinEtPeriode(medecinId, debut, fin);
     }
 
+    @GetMapping("/medecins/{medecinId}/recent")
+    public List<ConsultationSummaryDTO> consultationsRecents(@PathVariable Long medecinId,
+                                                             @RequestParam(defaultValue = "5") int limit) {
+        int effectiveLimit = limit > 0 ? limit : 5;
+        return consultationService.listerRecentsParMedecin(medecinId, effectiveLimit);
+    }
+
+    @GetMapping("/medecins/{medecinId}")
+    public Page<ConsultationSummaryDTO> consultationsPaged(@PathVariable Long medecinId,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size,
+                                                           @RequestParam(defaultValue = "dateConsultation,DESC") String sort,
+                                                           @RequestParam(required = false) Long patientId,
+                                                           @RequestParam(required = false) Boolean archived,
+                                                           @RequestParam(required = false) ConsultationType type) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), parseSort(sort));
+        return consultationService.listerParMedecinPaged(medecinId, patientId, archived, type, pageable);
+    }
+
+    @GetMapping("/stats/medecin/{medecinId}/weekly")
+    public MedecinWeeklyStatsDTO statsMedecinWeekly(@PathVariable Long medecinId,
+                                                    @RequestParam(required = false) Long cabinetId,
+                                                    @RequestParam(required = false) LocalDate startDate,
+                                                    @RequestParam(required = false) LocalDate endDate) {
+        return consultationService.statsMedecinWeekly(medecinId, cabinetId, startDate, endDate);
+    }
+
     @GetMapping("/auth")
     public Authentication authentication(Authentication authentication) {
         return authentication;
+    }
+
+    private Sort parseSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return Sort.by(Sort.Order.desc("dateConsultation"));
+        }
+        String[] parts = sortParam.split(",");
+        String property = parts[0].trim();
+        String direction = parts.length > 1 ? parts[1].trim().toUpperCase() : "ASC";
+        Sort.Order order = "DESC".equals(direction) ? Sort.Order.desc(property) : Sort.Order.asc(property);
+        return Sort.by(order);
     }
 }

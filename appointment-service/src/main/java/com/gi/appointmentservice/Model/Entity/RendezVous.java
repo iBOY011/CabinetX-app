@@ -51,4 +51,7 @@ public class RendezVous {
 
     private String notes;
 
+    @Column
+    private Integer queuePosition;
+
 }

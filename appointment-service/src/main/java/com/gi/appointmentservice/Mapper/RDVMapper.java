@@ -42,6 +42,7 @@ public class RDVMapper {
         dto.setMotifRDV(rdv.getMotifRDV());
         dto.setNotes(rdv.getNotes());
         dto.setStatutRDV(rdv.getStatutRDV());
+        dto.setQueuePosition(rdv.getQueuePosition());
         return dto;
     }
 }

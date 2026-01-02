@@ -21,5 +21,6 @@ public class RDVResponse extends RDVRequest{
     private String cin;
     private LocalDate dateNaissance;
     private StatutRDV statutRDV;
+    private Integer queuePosition;
     
 }

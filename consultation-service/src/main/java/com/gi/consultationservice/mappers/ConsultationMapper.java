@@ -30,6 +30,8 @@ public class ConsultationMapper {
                 .diagnostic(dto.getDiagnostic())
                 .traitement(dto.getTraitement())
                 .observations(dto.getObservations())
+                .archived(dto.getArchived())
+                .archivedAt(dto.getArchivedAt())
                 .build();
     }
 
@@ -50,6 +52,8 @@ public class ConsultationMapper {
                 .diagnostic(entity.getDiagnostic())
                 .traitement(entity.getTraitement())
                 .observations(entity.getObservations())
+                .archived(entity.getArchived())
+                .archivedAt(entity.getArchivedAt())
                 .build();
     }
 
@@ -64,6 +68,8 @@ public class ConsultationMapper {
                 .diagnostic(entity.getDiagnostic())
                 .traitement(entity.getTraitement())
                 .observations(entity.getObservations())
+                .archived(entity.getArchived())
+                .archivedAt(entity.getArchivedAt())
                 .build();
     }
 

@@ -74,6 +74,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<UserDTO> findAll() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserDTO dto = mapToDTO(user);
+                    // Set clinicId from profile
+                    if (user.getRole() == UserRole.DOCTOR) {
+                        doctorProfileRepository.findByUserId(user.getId())
+                                .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
+                    } else if (user.getRole() == UserRole.SECRETARY) {
+                        secretaryProfileRepository.findByUserId(user.getId())
+                                .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public UserDTO updateUser(Long id, UserDTO dto) {
         User user = userRepository.findById(id)
