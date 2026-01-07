@@ -12,5 +12,9 @@ public interface SubscriptionPaymentRepository extends JpaRepository<Subscriptio
 
     Optional<SubscriptionPayment> findByStripeSessionId(String sessionId);
 
+    Optional<SubscriptionPayment> findByStripeInvoiceId(String invoiceId);
+
     List<SubscriptionPayment> findByCabinetId(Long cabinetId);
+
+    List<SubscriptionPayment> findByCabinetIdOrderByCreatedAtDesc(Long cabinetId);
 }

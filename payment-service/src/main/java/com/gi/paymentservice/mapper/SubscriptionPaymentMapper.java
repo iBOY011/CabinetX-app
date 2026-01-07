@@ -18,7 +18,7 @@ public class SubscriptionPaymentMapper {
         payment.setCabinetId(dto.getCabinetId());
         payment.setDoctorId(dto.getDoctorId());
         payment.setAmount(dto.getAmount());
-        payment.setCurrency("EUR"); // default
+        payment.setCurrency("MAD");
         payment.setPaymentType(PaymentType.SUBSCRIPTION_CABINET);
         payment.setStatus(PaymentStatus.INITIATED);
         payment.setCreatedAt(LocalDateTime.now());
@@ -34,6 +34,10 @@ public class SubscriptionPaymentMapper {
             entity.getCurrency(),
             entity.getStatus(),
             entity.getRedirectUrl(),
+            entity.getStripeInvoiceId(),
+            entity.getInvoiceUrl(),
+            entity.getPeriodStart(),
+            entity.getPeriodEnd(),
             entity.getCreatedAt(),
             entity.getPaidAt()
         );
