@@ -8,6 +8,7 @@ import com.gi.notificationservice.model.enums.NotificationStatus;
 import com.gi.notificationservice.model.enums.NotificationType;
 import com.gi.notificationservice.repository.NotificationRepository;
 import com.gi.notificationservice.service.NotificationService;
+import com.gi.notificationservice.controller.NotificationWebSocketController;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,9 +17,12 @@ import java.util.stream.Collectors;
 @Service
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository repository;
+    private final NotificationWebSocketController webSocketController;
 
-    public NotificationServiceImpl(NotificationRepository repository) {
+    public NotificationServiceImpl(NotificationRepository repository,
+            NotificationWebSocketController webSocketController) {
         this.repository = repository;
+        this.webSocketController = webSocketController;
     }
 
     @Override
@@ -40,11 +44,34 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setRecipientId(adminId);
         notification.setType(NotificationType.SUBSCRIPTION_EXPIRATION_ALERT);
         notification.setTitle("Subscription Expiration Alert");
-        notification.setContent("The subscription for clinic " + clinicName + " will expire in " + daysRemaining + " days.");
+        notification.setContent(
+                "The subscription for clinic " + clinicName + " will expire in " + daysRemaining + " days.");
         notification.setStatus(NotificationStatus.PENDING);
         notification.setCreationDate(LocalDateTime.now());
         Notification saved = repository.save(notification);
         return NotificationMapper.toResponse(saved);
+    }
+
+    @Override
+    public NotificationResponse sendPatientConsultationNotification(Long doctorId, Long appointmentId,
+            String patientName, Integer patientAge, String reason, String appointmentTime) {
+        Notification notification = new Notification();
+        notification.setRecipientId(doctorId);
+        notification.setType(NotificationType.PATIENT_CONSULTATION);
+        notification.setTitle("Nouveau patient en consultation");
+        notification.setContent(String.format("%s (%d ans) vous attend - Motif: %s - Prévu à %s",
+                patientName, patientAge, reason, appointmentTime));
+        notification.setStatus(NotificationStatus.PENDING);
+        notification.setCreationDate(LocalDateTime.now());
+        Notification saved = repository.save(notification);
+
+        // Convert to response DTO
+        NotificationResponse response = NotificationMapper.toResponse(saved);
+
+        // Send via WebSocket for real-time delivery
+        webSocketController.sendNotificationToDoctor(doctorId, response);
+
+        return response;
     }
 
     @Override

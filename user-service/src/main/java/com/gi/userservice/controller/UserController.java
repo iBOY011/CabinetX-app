@@ -66,4 +66,12 @@ public class UserController {
         List<UserDTO> dtos = userService.listByRole(role);
         return ResponseEntity.ok(dtos);
     }
+
+    @GetMapping("/login/{login}")
+    public ResponseEntity<UserDTO> getUserByLogin(@PathVariable String login) {
+        System.out.println("getUserByLogin" + login);
+        UserDTO dto = userService.findByLogin(login);
+        System.out.println(dto);
+        return ResponseEntity.ok(dto);
+    }
 }

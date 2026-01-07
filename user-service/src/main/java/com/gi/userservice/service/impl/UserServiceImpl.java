@@ -186,6 +186,24 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public UserDTO findByLogin(String login) {
+        User user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new RuntimeException("User not found with login: " + login));
+        UserDTO dto = mapToDTO(user);
+
+        // Set clinicId from profile based on role
+        if (user.getRole() == UserRole.MEDCIN) {
+            doctorProfileRepository.findByUserId(user.getId())
+                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
+        } else if (user.getRole() == UserRole.SECRETAIRE) {
+            secretaryProfileRepository.findByUserId(user.getId())
+                    .ifPresent(profile -> dto.setClinicId(profile.getClinicId()));
+        }
+
+        return dto;
+    }
+
     private UserDTO mapToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());

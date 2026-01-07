@@ -29,4 +29,16 @@ public class NotificationController {
     public ResponseEntity<NotificationResponse> markAsRead(@PathVariable Long notificationId) {
         return ResponseEntity.ok(service.markAsRead(notificationId));
     }
+
+    @PostMapping("/patient-consultation")
+    public ResponseEntity<NotificationResponse> sendPatientConsultation(
+            @RequestParam Long doctorId,
+            @RequestParam Long appointmentId,
+            @RequestParam String patientName,
+            @RequestParam Integer patientAge,
+            @RequestParam String reason,
+            @RequestParam String appointmentTime) {
+        return ResponseEntity.ok(service.sendPatientConsultationNotification(
+                doctorId, appointmentId, patientName, patientAge, reason, appointmentTime));
+    }
 }
