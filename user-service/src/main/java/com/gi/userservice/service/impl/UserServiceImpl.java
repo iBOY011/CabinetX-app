@@ -114,12 +114,40 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setPassword(dto.getPassword());
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPassword(dto.getPassword());
+        }
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setRole(dto.getRole());
         user.setActive(dto.isActive());
         User saved = userRepository.save(user);
-        return mapToDTO(saved);
+
+        // Update clinicId in profile based on role
+        if (dto.getClinicId() != null) {
+            if (dto.getRole() == UserRole.MEDCIN) {
+                DoctorProfile profile = doctorProfileRepository.findByUserId(saved.getId())
+                        .orElseGet(() -> {
+                            DoctorProfile newProfile = new DoctorProfile();
+                            newProfile.setUserId(saved.getId());
+                            return newProfile;
+                        });
+                profile.setClinicId(dto.getClinicId());
+                doctorProfileRepository.save(profile);
+            } else if (dto.getRole() == UserRole.SECRETAIRE) {
+                SecretaryProfile profile = secretaryProfileRepository.findByUserId(saved.getId())
+                        .orElseGet(() -> {
+                            SecretaryProfile newProfile = new SecretaryProfile();
+                            newProfile.setUserId(saved.getId());
+                            return newProfile;
+                        });
+                profile.setClinicId(dto.getClinicId());
+                secretaryProfileRepository.save(profile);
+            }
+        }
+
+        UserDTO resultDto = mapToDTO(saved);
+        resultDto.setClinicId(dto.getClinicId());
+        return resultDto;
     }
 
     @Override
