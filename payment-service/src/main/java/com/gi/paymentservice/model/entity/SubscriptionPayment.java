@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -49,6 +50,16 @@ public class SubscriptionPayment {
 
     @Column(length = 255)
     private String stripePaymentIntentId;
+
+    @Column(length = 255)
+    private String stripeInvoiceId;
+
+    @Column(length = 500)
+    private String invoiceUrl;
+
+    private LocalDate periodStart;
+
+    private LocalDate periodEnd;
 
     @Column(length = 500)
     private String redirectUrl;

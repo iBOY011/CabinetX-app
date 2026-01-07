@@ -18,4 +18,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 		List<Patient> findByPrenomContainingIgnoreCase(String prenom);
 
 		List<Patient> findByNomContainingIgnoreCaseAndPrenomContainingIgnoreCase(String nom, String prenom);
+
+		List<Patient> findByCabinetId(Long cabinetId);
 }

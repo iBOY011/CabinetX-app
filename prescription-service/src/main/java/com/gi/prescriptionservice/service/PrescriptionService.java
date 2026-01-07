@@ -1,9 +1,9 @@
 package com.gi.prescriptionservice.service;
 
+import java.util.List;
+
 import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
 import com.gi.prescriptionservice.model.dto.PrescriptionLineDTO;
-
-import java.util.List;
 
 public interface PrescriptionService {
 
@@ -15,7 +15,11 @@ public interface PrescriptionService {
 
     PrescriptionDTO findById(Long id);
 
+    PrescriptionDTO findByConsultationId(Long consultationId);
+
     List<PrescriptionDTO> findByPatientId(Long patientId);
+
+    List<PrescriptionDTO> findByClinicAndDateRange(Long clinicId, java.time.LocalDate start, java.time.LocalDate end);
 
     byte[] generateMedicationPdf(Long prescriptionId);
 

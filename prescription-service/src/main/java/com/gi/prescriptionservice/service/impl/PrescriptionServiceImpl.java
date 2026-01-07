@@ -1,5 +1,11 @@
 package com.gi.prescriptionservice.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gi.prescriptionservice.exception.ResourceNotFoundException;
 import com.gi.prescriptionservice.mapper.PrescriptionMapper;
 import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
@@ -11,13 +17,6 @@ import com.gi.prescriptionservice.repository.PrescriptionRepository;
 import com.gi.prescriptionservice.service.PrescriptionService;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -77,8 +76,23 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     @Transactional(readOnly = true)
+    public PrescriptionDTO findByConsultationId(Long consultationId) {
+        Prescription prescription = prescriptionRepository.findByConsultationId(consultationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found for consultation"));
+        return mapper.toDTO(prescription);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PrescriptionDTO> findByPatientId(Long patientId) {
         List<Prescription> prescriptions = prescriptionRepository.findByPatientId(patientId);
+        return prescriptions.stream().map(mapper::toDTO).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PrescriptionDTO> findByClinicAndDateRange(Long clinicId, java.time.LocalDate start, java.time.LocalDate end) {
+        List<Prescription> prescriptions = prescriptionRepository.findByClinicIdAndPrescriptionDateBetween(clinicId, start, end);
         return prescriptions.stream().map(mapper::toDTO).toList();
     }
 
