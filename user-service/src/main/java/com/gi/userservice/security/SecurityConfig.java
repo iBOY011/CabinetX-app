@@ -22,19 +22,18 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthConverter jwtAuthConverter) {
         this.jwtAuthConverter = jwtAuthConverter;
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
-                .sessionManagement(sm->sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(ar->ar.requestMatchers("/h2-console/**", "/actuator/**").permitAll())
-                .authorizeHttpRequests(ar->ar.requestMatchers("/api/**").hasAuthority("ADMIN"))
-                .authorizeHttpRequests(ar->ar.anyRequest().authenticated())
-                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
+                .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .authorizeHttpRequests(ar -> ar.requestMatchers("/h2-console/**", "/actuator/**").permitAll())
+                .authorizeHttpRequests(ar -> ar.requestMatchers("/api/**").permitAll())
+                .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
+                .oauth2ResourceServer(o2 -> o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
                 .build();
     }
 }
-
-
