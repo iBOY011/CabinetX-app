@@ -48,6 +48,7 @@ public class ConsultationController {
 
     @PutMapping("/{id}")
     public ConsultationDTO modifierConsultation(@PathVariable Long id, @RequestBody @Valid ConsultationDTO dto) {
+        System.out.println("Modifying consultation ID " + id + " with data: " + dto);
         return consultationService.modifierConsultation(id, dto);
     }
 

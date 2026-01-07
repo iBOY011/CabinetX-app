@@ -1,15 +1,23 @@
 package com.gi.prescriptionservice.controller;
 
-import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
-import com.gi.prescriptionservice.model.dto.PrescriptionLineDTO;
-import com.gi.prescriptionservice.service.PrescriptionService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
+import com.gi.prescriptionservice.model.dto.PrescriptionLineDTO;
+import com.gi.prescriptionservice.service.PrescriptionService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/prescriptions")
@@ -20,6 +28,7 @@ public class PrescriptionController {
 
     @PostMapping
     public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO dto) {
+        System.out.println("Received prescription data: " + dto);
         PrescriptionDTO created = prescriptionService.createPrescription(dto);
         return ResponseEntity.ok(created);
     }
@@ -42,9 +51,24 @@ public class PrescriptionController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/consultation/{consultationId}")
+    public ResponseEntity<PrescriptionDTO> findByConsultation(@PathVariable Long consultationId) {
+        PrescriptionDTO dto = prescriptionService.findByConsultationId(consultationId);
+        return ResponseEntity.ok(dto);
+    }
+
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<PrescriptionDTO>> findByPatientId(@PathVariable Long patientId) {
         List<PrescriptionDTO> dtos = prescriptionService.findByPatientId(patientId);
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/clinic/{clinicId}/this-week")
+    public ResponseEntity<List<PrescriptionDTO>> findClinicPrescriptionsThisWeek(@PathVariable Long clinicId) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate start = today.with(java.time.DayOfWeek.MONDAY);
+        java.time.LocalDate end = today.with(java.time.DayOfWeek.SUNDAY);
+        List<PrescriptionDTO> dtos = prescriptionService.findByClinicAndDateRange(clinicId, start, end);
         return ResponseEntity.ok(dtos);
     }
 

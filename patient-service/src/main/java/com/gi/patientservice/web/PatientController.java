@@ -51,4 +51,9 @@ public class PatientController {
         }
         return patientService.listPatients();
     }
+
+    @GetMapping("/by-cabinet/{cabinetId}")
+    public List<PatientDTO> listPatientsByCabinet(@PathVariable Long cabinetId) {
+        return patientService.listPatientsByCabinet(cabinetId);
+    }
 }
