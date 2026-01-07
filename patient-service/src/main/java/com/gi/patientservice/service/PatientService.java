@@ -91,6 +91,11 @@ public class PatientService {
         return patientMapper.toDTOList(patientRepository.findAll());
     }
 
+    @Transactional(readOnly = true)
+    public List<PatientDTO> listPatientsByCabinet(Long cabinetId) {
+        return patientMapper.toDTOList(patientRepository.findByCabinetId(cabinetId));
+    }
+
     private Patient getPatientEntity(Long id) {
         return patientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient introuvable"));

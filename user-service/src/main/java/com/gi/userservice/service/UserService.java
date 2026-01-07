@@ -1,10 +1,10 @@
 package com.gi.userservice.service;
 
+import java.util.List;
+
 import com.gi.userservice.model.dto.UserDTO;
 import com.gi.userservice.model.dto.request.CreateUserRequest;
 import com.gi.userservice.model.enums.UserRole;
-
-import java.util.List;
 
 public interface UserService {
 

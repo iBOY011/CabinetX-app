@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,6 +21,10 @@ public class SubscriptionPaymentDTO {
     private String currency;
     private PaymentStatus status;
     private String redirectUrl;
+    private String stripeInvoiceId;
+    private String invoiceUrl;
+    private LocalDate periodStart;
+    private LocalDate periodEnd;
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
 }
