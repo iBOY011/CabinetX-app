@@ -23,4 +23,6 @@ public interface UserService {
     List<UserDTO> listByClinic(Long clinicId);
 
     List<UserDTO> listByRole(UserRole role);
+
+    UserDTO findByLogin(String login);
 }

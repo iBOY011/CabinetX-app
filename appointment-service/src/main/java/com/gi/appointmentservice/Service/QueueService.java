@@ -21,6 +21,8 @@ public class QueueService {
 
     private final RDVRepository rdvRepository;
     private final PatientClient patientClient;
+    private final NotificationClient notificationClient;
+    private final CabinetClient cabinetClient;
 
     /**
      * Get all appointments in queue for a specific date and cabinet
@@ -29,14 +31,16 @@ public class QueueService {
     public List<RDVResponse> getQueueByDateAndCabinet(LocalDate date, Long cabinetId) {
         List<RendezVous> queueAppointments = rdvRepository
                 .findByCabinetIdAndDateAndStatutRDV(cabinetId, date, StatutRDV.EN_ATTENTE);
-        
+
         // Sort by queuePosition (nulls last), then by Heure_debut
         queueAppointments.sort((a, b) -> {
             if (a.getQueuePosition() == null && b.getQueuePosition() == null) {
                 return a.getHeure_debut().compareTo(b.getHeure_debut());
             }
-            if (a.getQueuePosition() == null) return 1;
-            if (b.getQueuePosition() == null) return -1;
+            if (a.getQueuePosition() == null)
+                return 1;
+            if (b.getQueuePosition() == null)
+                return -1;
             return a.getQueuePosition().compareTo(b.getQueuePosition());
         });
 
@@ -65,11 +69,11 @@ public class QueueService {
         // Get current max queue position for this cabinet/date
         Integer maxPosition = rdvRepository.findMaxQueuePositionByCabinetAndDate(
                 rdv.getCabinetId(), rdv.getDate());
-        
+
         // Assign next position
         rdv.setQueuePosition(maxPosition == null ? 1 : maxPosition + 1);
         rdv.setStatutRDV(StatutRDV.EN_ATTENTE);
-        
+
         RendezVous saved = rdvRepository.save(rdv);
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
         return RDVMapper.toResponse(saved, patientInfo);
@@ -90,7 +94,7 @@ public class QueueService {
         Integer removedPosition = rdv.getQueuePosition();
         rdv.setStatutRDV(StatutRDV.CONFIRME);
         rdv.setQueuePosition(null);
-        
+
         RendezVous saved = rdvRepository.save(rdv);
 
         // Reorder remaining queue items
@@ -117,7 +121,7 @@ public class QueueService {
         Integer removedPosition = rdv.getQueuePosition();
         rdv.setStatutRDV(StatutRDV.EN_CONSULTATION);
         rdv.setQueuePosition(null);
-        
+
         RendezVous saved = rdvRepository.save(rdv);
 
         // Reorder remaining queue items
@@ -126,7 +130,46 @@ public class QueueService {
         }
 
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
+
+        // Get doctor ID dynamically from cabinet
+        Long doctorId = null;
+        try {
+            var cabinetInfo = cabinetClient.getCabinetById(saved.getCabinetId());
+            doctorId = cabinetInfo.getMedecinId();
+        } catch (Exception e) {
+            System.err.println("Failed to retrieve cabinet info, using fallback: " + e.getMessage());
+            // Fallback: use environment variable or default
+            doctorId = Long.parseLong(System.getenv().getOrDefault("DEFAULT_MEDECIN_ID", "1"));
+        }
+
+        // Send real-time notification to doctor
+        if (doctorId != null && doctorId > 0) {
+            try {
+                Integer patientAge = calculateAge(patientInfo.getDateNaissance());
+                notificationClient.sendPatientConsultationNotification(
+                        doctorId,
+                        saved.getId(),
+                        patientInfo.getPrenom() + " " + patientInfo.getNom(),
+                        patientAge,
+                        saved.getMotifRDV().toString(),
+                        saved.getHeure_debut().toString());
+            } catch (Exception e) {
+                System.err.println("Failed to send notification, but continuing: " + e.getMessage());
+            }
+        } else {
+            System.err.println("No valid doctor ID found, skipping notification");
+        }
+
         return RDVMapper.toResponse(saved, patientInfo);
+    }
+
+    /**
+     * Calculate patient age from birth date
+     */
+    private Integer calculateAge(java.time.LocalDate dateNaissance) {
+        if (dateNaissance == null)
+            return 0;
+        return java.time.Period.between(dateNaissance, java.time.LocalDate.now()).getYears();
     }
 
     /**
@@ -136,7 +179,7 @@ public class QueueService {
     public List<RDVResponse> reorderQueue(Long cabinetId, LocalDate date, List<Long> appointmentIds) {
         // Validate all appointments exist and are in queue
         List<RendezVous> appointments = rdvRepository.findAllById(appointmentIds);
-        
+
         if (appointments.size() != appointmentIds.size()) {
             throw new RuntimeException("Some appointments not found");
         }
