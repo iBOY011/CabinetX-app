@@ -22,7 +22,7 @@ public class QueueService {
     private final RDVRepository rdvRepository;
     private final PatientClient patientClient;
     private final NotificationClient notificationClient;
-    private final CabinetClient cabinetClient;
+    private final UserClient userClient;
 
     /**
      * Get all appointments in queue for a specific date and cabinet
@@ -130,34 +130,57 @@ public class QueueService {
         }
 
         var patientInfo = patientClient.getPatientById(saved.getPatientId());
+        
+        System.out.println("[QueueService] callNext - appointmentId: " + saved.getId() + ", cabinetId: " + saved.getCabinetId());
 
-        // Get doctor ID dynamically from cabinet
+        // Get doctor ID from user service by clinic ID
         Long doctorId = null;
         try {
-            var cabinetInfo = cabinetClient.getCabinetById(saved.getCabinetId());
-            doctorId = cabinetInfo.getMedecinId();
+            System.out.println("[QueueService] Fetching users for clinicId: " + saved.getCabinetId());
+            var users = userClient.getUsersByClinic(saved.getCabinetId());
+            
+            // Find the first MEDCIN role user
+            if (users != null && !users.isEmpty()) {
+                var doctor = users.stream()
+                        .filter(user -> "MEDCIN".equalsIgnoreCase(user.getRole()))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (doctor != null) {
+                    doctorId = doctor.getId();
+                    System.out.println("[QueueService] Retrieved doctorId: " + doctorId + " (Dr. " + doctor.getFirstName() + " " + doctor.getLastName() + ") from user service");
+                } else {
+                    System.err.println("[QueueService] No doctor (MEDCIN) found for clinic " + saved.getCabinetId());
+                }
+            } else {
+                System.err.println("[QueueService] No users found for clinic " + saved.getCabinetId());
+            }
         } catch (Exception e) {
-            System.err.println("Failed to retrieve cabinet info, using fallback: " + e.getMessage());
-            // Fallback: use environment variable or default
-            doctorId = Long.parseLong(System.getenv().getOrDefault("DEFAULT_MEDECIN_ID", "1"));
+            System.err.println("[QueueService] Failed to retrieve doctor from user service: " + e.getMessage());
+            e.printStackTrace();
         }
 
         // Send real-time notification to doctor
+        System.out.println("[QueueService] Checking notification conditions - doctorId: " + doctorId);
         if (doctorId != null && doctorId > 0) {
             try {
                 Integer patientAge = calculateAge(patientInfo.getDateNaissance());
+                System.out.println("[QueueService] Sending notification to doctorId: " + doctorId + " for patient: " + patientInfo.getPrenom() + " " + patientInfo.getNom());
                 notificationClient.sendPatientConsultationNotification(
                         doctorId,
                         saved.getId(),
+                        saved.getPatientId(),
                         patientInfo.getPrenom() + " " + patientInfo.getNom(),
                         patientAge,
                         saved.getMotifRDV().toString(),
                         saved.getHeure_debut().toString());
+                System.out.println("[QueueService] Notification sent successfully");
             } catch (Exception e) {
-                System.err.println("Failed to send notification, but continuing: " + e.getMessage());
+                System.err.println("[QueueService] Failed to send notification: " + e.getMessage());
+                e.printStackTrace();
             }
         } else {
-            System.err.println("No valid doctor ID found, skipping notification");
+            System.err.println("[QueueService] No valid doctor ID found (doctorId=" + doctorId + "), skipping notification");
         }
 
         return RDVMapper.toResponse(saved, patientInfo);

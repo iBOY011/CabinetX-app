@@ -53,7 +53,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationResponse sendPatientConsultationNotification(Long doctorId, Long appointmentId,
+    public NotificationResponse sendPatientConsultationNotification(Long doctorId, Long appointmentId, Long patientId,
             String patientName, Integer patientAge, String reason, String appointmentTime) {
         Notification notification = new Notification();
         notification.setRecipientId(doctorId);
@@ -63,6 +63,8 @@ public class NotificationServiceImpl implements NotificationService {
                 patientName, patientAge, reason, appointmentTime));
         notification.setStatus(NotificationStatus.PENDING);
         notification.setCreationDate(LocalDateTime.now());
+        notification.setAppointmentId(appointmentId);
+        notification.setPatientId(patientId);
         Notification saved = repository.save(notification);
 
         // Convert to response DTO
@@ -70,6 +72,31 @@ public class NotificationServiceImpl implements NotificationService {
 
         // Send via WebSocket for real-time delivery
         webSocketController.sendNotificationToDoctor(doctorId, response);
+
+        return response;
+    }
+
+    @Override
+    public NotificationResponse sendBillingReadyNotification(Long secretaryId, Long consultationId, Long appointmentId,
+            Long patientId, String patientName, String diagnostic, String traitement) {
+        Notification notification = new Notification();
+        notification.setRecipientId(secretaryId);
+        notification.setType(NotificationType.BILLING_READY);
+        notification.setTitle("Consultation terminée - Facturation requise");
+        notification.setContent(String.format("La consultation de %s est terminée. Diagnostic: %s. Prête pour facturation.",
+                patientName, diagnostic));
+        notification.setStatus(NotificationStatus.PENDING);
+        notification.setCreationDate(LocalDateTime.now());
+        notification.setAppointmentId(appointmentId);
+        notification.setPatientId(patientId);
+        notification.setConsultationId(consultationId);
+        Notification saved = repository.save(notification);
+
+        // Convert to response DTO
+        NotificationResponse response = NotificationMapper.toResponse(saved);
+
+        // Send via WebSocket for real-time delivery to secretary
+        webSocketController.sendNotificationToDoctor(secretaryId, response);
 
         return response;
     }

@@ -28,4 +28,11 @@ public class Notification {
     private LocalDateTime creationDate;
 
     private LocalDateTime readDate;
+
+    // Metadata for consultation notifications
+    private Long patientId;
+    
+    private Long appointmentId;
+    
+    private Long consultationId;
 }

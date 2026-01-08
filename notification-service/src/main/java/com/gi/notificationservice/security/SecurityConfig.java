@@ -14,25 +14,24 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    private JwtAuthConverter jwtAuthConverter;
 
-    public SecurityConfig(JwtAuthConverter jwtAuthConverter) {
-        this.jwtAuthConverter = jwtAuthConverter;
-    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // CORS is handled by the gateway - disable here to avoid duplicate headers
+                // Disable CORS here - Gateway handles CORS for API requests
+                // WebSocket CORS is handled by WebSocketConfig.setAllowedOrigins()
                 .cors(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm->sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(ar->ar.requestMatchers("/h2-console/**").permitAll())
-                .authorizeHttpRequests(ar->ar.requestMatchers("/api/**").hasAuthority("ADMIN"))
-                .authorizeHttpRequests(ar->ar.anyRequest().authenticated())
-                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
+                .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .authorizeHttpRequests(ar -> ar
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        // Allow WebSocket endpoints without authentication
+                        .requestMatchers("/ws-notifications/**").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .build();
     }
+
 }
-
-

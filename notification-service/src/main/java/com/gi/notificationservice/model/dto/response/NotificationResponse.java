@@ -14,4 +14,7 @@ public class NotificationResponse {
     private String content;
     private NotificationStatus status;
     private LocalDateTime creationDate;
+    private Long patientId;
+    private Long appointmentId;
+    private Long consultationId;
 }

@@ -30,6 +30,10 @@ import com.gi.consultationservice.mappers.ConsultationMapper;
 import com.gi.consultationservice.messaging.OrdonnanceCountClient;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
+import com.gi.consultationservice.client.AppointmentClient;
+import com.gi.consultationservice.client.NotificationClient;
+import com.gi.consultationservice.client.UserClient;
+import com.gi.consultationservice.client.PatientClient;
 
 @Service
 @Transactional
@@ -41,15 +45,27 @@ public class ConsultationService {
     private final ConsultationEventRepository eventRepository;
     private final ConsultationMapper consultationMapper;
     private final OrdonnanceCountClient ordonnanceCountClient;
+    private final AppointmentClient appointmentClient;
+    private final NotificationClient notificationClient;
+    private final UserClient userClient;
+    private final PatientClient patientClient;
 
     public ConsultationService(ConsultationRepository consultationRepository,
                                ConsultationEventRepository eventRepository,
                                ConsultationMapper consultationMapper,
-                               OrdonnanceCountClient ordonnanceCountClient) {
+                               OrdonnanceCountClient ordonnanceCountClient,
+                               AppointmentClient appointmentClient,
+                               NotificationClient notificationClient,
+                               UserClient userClient,
+                               PatientClient patientClient) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
         this.ordonnanceCountClient = ordonnanceCountClient;
+        this.appointmentClient = appointmentClient;
+        this.notificationClient = notificationClient;
+        this.userClient = userClient;
+        this.patientClient = patientClient;
     }
 
     public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
@@ -64,8 +80,15 @@ public class ConsultationService {
 
     public ConsultationDTO modifierConsultation(Long id, ConsultationDTO dto) {
         Consultation existing = chargerConsultation(id);
+        boolean wasNotArchived = !existing.getArchived();
         appliquerChangements(existing, dto);
         Consultation updated = consultationRepository.save(existing);
+        
+        // If consultation is being archived (terminated), trigger notifications
+        if (wasNotArchived && dto.getArchived() != null && dto.getArchived()) {
+            handleConsultationCompletion(updated);
+        }
+        
         return consultationMapper.toDTO(updated);
     }
 
@@ -246,5 +269,41 @@ public class ConsultationService {
 
     private Specification<Consultation> specDateBetween(OffsetDateTime debut, OffsetDateTime fin) {
         return (root, query, cb) -> cb.between(root.get("dateConsultation"), debut, fin);
+    }
+
+    private void handleConsultationCompletion(Consultation consultation) {
+        try {
+            // 1. Mark appointment as completed
+            if (consultation.getRendezVousId() != null) {
+                appointmentClient.markAppointmentAsCompleted(consultation.getRendezVousId());
+                System.out.println("[ConsultationService] Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
+            }
+
+            // 2. Get patient info
+            PatientClient.PatientDTO patient = patientClient.getPatientById(consultation.getPatientId());
+            String patientName = patient.getPrenom() + " " + patient.getNom();
+
+            // 3. Get all secretaries in the same cabinet
+            List<UserClient.UserDTO> secretaries = userClient.getUsersByCabinetAndRole(
+                    consultation.getCabinetId(), "secretaire");
+
+            // 4. Send notification to each secretary
+            for (UserClient.UserDTO secretary : secretaries) {
+                notificationClient.sendBillingReadyNotification(
+                        secretary.getId(),
+                        consultation.getId(),
+                        consultation.getRendezVousId(),
+                        consultation.getPatientId(),
+                        patientName,
+                        consultation.getDiagnostic(),
+                        consultation.getTraitement()
+                );
+                System.out.println("[ConsultationService] Sent billing notification to secretary " + secretary.getId());
+            }
+        } catch (Exception e) {
+            System.err.println("[ConsultationService] Error handling consultation completion: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw - we don't want to rollback the consultation update if notifications fail
+        }
     }
 }
