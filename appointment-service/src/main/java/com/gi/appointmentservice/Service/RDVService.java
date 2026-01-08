@@ -130,9 +130,7 @@ public class RDVService {
         rdv.setStatutRDV(statut);
 
         rdvRepository.save(rdv);
-        PatientInfoDTO patientInfo = new PatientInfoDTO();
-        patientInfo.setPrenom("Ikrame");
-        patientInfo.setNom("Gouaiche");
+        PatientInfoDTO patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo);
     }
 
