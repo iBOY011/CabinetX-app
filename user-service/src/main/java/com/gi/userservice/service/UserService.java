@@ -25,4 +25,6 @@ public interface UserService {
     List<UserDTO> listByRole(UserRole role);
 
     UserDTO findByLogin(String login);
+
+    List<UserDTO> findByCabinetIdAndRole(Long cabinetId, String role);
 }

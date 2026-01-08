@@ -262,6 +262,24 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
+    @Override
+    public List<UserDTO> findByCabinetIdAndRole(Long cabinetId, String role) {
+        UserRole userRole;
+        try {
+            userRole = UserRole.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid role: " + role);
+        }
+
+        return userRepository.findByClinicIdAndRole(cabinetId, userRole).stream()
+                .map(user -> {
+                    UserDTO dto = mapToDTO(user);
+                    dto.setClinicId(cabinetId);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
     private UserDTO mapToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
