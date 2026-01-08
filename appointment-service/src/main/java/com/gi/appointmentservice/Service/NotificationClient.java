@@ -23,11 +23,13 @@ public class NotificationClient {
     public void sendPatientConsultationNotification(
             Long doctorId,
             Long appointmentId,
+            Long patientId,
             String patientName,
             Integer patientAge,
             String reason,
             String appointmentTime) {
 
+        System.out.println("[NotificationClient] Starting notification send - doctorId: " + doctorId + ", patient: " + patientName);
         try {
             webClient.post()
                     .uri(uriBuilder -> uriBuilder
@@ -36,6 +38,7 @@ public class NotificationClient {
                             .path("/api/notifications/patient-consultation")
                             .queryParam("doctorId", doctorId)
                             .queryParam("appointmentId", appointmentId)
+                            .queryParam("patientId", patientId)
                             .queryParam("patientName", patientName)
                             .queryParam("patientAge", patientAge)
                             .queryParam("reason", reason)
@@ -43,11 +46,14 @@ public class NotificationClient {
                             .build())
                     .retrieve()
                     .bodyToMono(Void.class)
+                    .doOnSuccess(result -> System.out.println("[NotificationClient] HTTP call completed successfully for doctorId: " + doctorId))
+                    .doOnError(error -> System.err.println("[NotificationClient] HTTP call failed: " + error.getMessage()))
                     .subscribe(); // Non-blocking call
 
-            System.out.println("Notification sent to doctor ID: " + doctorId + " for patient: " + patientName);
+            System.out.println("[NotificationClient] Notification HTTP request initiated for doctor ID: " + doctorId + " for patient: " + patientName);
         } catch (Exception e) {
-            System.err.println("Failed to send notification: " + e.getMessage());
+            System.err.println("[NotificationClient] Exception during notification send: " + e.getMessage());
+            e.printStackTrace();
             // Don't throw - notification failure shouldn't block the main operation
         }
     }
