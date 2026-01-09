@@ -271,8 +271,9 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Invalid role: " + role);
         }
 
-        // Profiles carry the clinic assignment; pick the right profile repository for the role
         List<Long> userIds;
+        
+        // Query profiles by clinicId to get user IDs
         if (userRole == UserRole.MEDCIN) {
             userIds = doctorProfileRepository.findByClinicId(cabinetId).stream()
                     .map(DoctorProfile::getUserId)
@@ -282,10 +283,10 @@ public class UserServiceImpl implements UserService {
                     .map(SecretaryProfile::getUserId)
                     .collect(Collectors.toList());
         } else {
-            // Other roles are not clinic-scoped
-            return List.of();
+            throw new RuntimeException("Role " + role + " does not have clinic association");
         }
 
+        // Fetch users by IDs and filter by role
         return userRepository.findAllById(userIds).stream()
                 .filter(user -> user.getRole() == userRole)
                 .map(user -> {
