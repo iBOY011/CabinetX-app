@@ -57,11 +57,23 @@ public class UserServiceImpl implements UserService {
 
         // Create profile based on role
         if (request.getRole() == UserRole.MEDCIN) {
+            // Check if clinic already has a doctor
+            List<DoctorProfile> existingDoctors = doctorProfileRepository.findByClinicId(request.getClinicId());
+            if (!existingDoctors.isEmpty()) {
+                throw new IllegalArgumentException("Cette clinique a déjà un médecin assigné. Une clinique ne peut avoir qu'un seul médecin.");
+            }
+            
             DoctorProfile profile = new DoctorProfile();
             profile.setUserId(savedUser.getId());
-            profile.setClinicId(request.getClinicId()); // Assuming clinicId in request
+            profile.setClinicId(request.getClinicId());
             doctorProfileRepository.save(profile);
         } else if (request.getRole() == UserRole.SECRETAIRE) {
+            // Check if clinic already has a secretary
+            List<SecretaryProfile> existingSecretaries = secretaryProfileRepository.findByClinicId(request.getClinicId());
+            if (!existingSecretaries.isEmpty()) {
+                throw new IllegalArgumentException("Cette clinique a déjà une secrétaire assignée. Une clinique ne peut avoir qu'une seule secrétaire.");
+            }
+            
             SecretaryProfile profile = new SecretaryProfile();
             profile.setUserId(savedUser.getId());
             profile.setClinicId(request.getClinicId());
@@ -125,6 +137,15 @@ public class UserServiceImpl implements UserService {
         // Update clinicId in profile based on role
         if (dto.getClinicId() != null) {
             if (dto.getRole() == UserRole.MEDCIN) {
+                // Check if another doctor is already assigned to this clinic
+                List<DoctorProfile> existingDoctors = doctorProfileRepository.findByClinicId(dto.getClinicId());
+                boolean clinicHasOtherDoctor = existingDoctors.stream()
+                    .anyMatch(profile -> !profile.getUserId().equals(id));
+                
+                if (clinicHasOtherDoctor) {
+                    throw new IllegalArgumentException("Cette clinique a déjà un médecin assigné. Une clinique ne peut avoir qu'un seul médecin.");
+                }
+                
                 DoctorProfile profile = doctorProfileRepository.findByUserId(saved.getId())
                         .orElseGet(() -> {
                             DoctorProfile newProfile = new DoctorProfile();
@@ -134,6 +155,15 @@ public class UserServiceImpl implements UserService {
                 profile.setClinicId(dto.getClinicId());
                 doctorProfileRepository.save(profile);
             } else if (dto.getRole() == UserRole.SECRETAIRE) {
+                // Check if another secretary is already assigned to this clinic
+                List<SecretaryProfile> existingSecretaries = secretaryProfileRepository.findByClinicId(dto.getClinicId());
+                boolean clinicHasOtherSecretary = existingSecretaries.stream()
+                    .anyMatch(profile -> !profile.getUserId().equals(id));
+                
+                if (clinicHasOtherSecretary) {
+                    throw new IllegalArgumentException("Cette clinique a déjà une secrétaire assignée. Une clinique ne peut avoir qu'une seule secrétaire.");
+                }
+                
                 SecretaryProfile profile = secretaryProfileRepository.findByUserId(saved.getId())
                         .orElseGet(() -> {
                             SecretaryProfile newProfile = new SecretaryProfile();
@@ -230,6 +260,24 @@ public class UserServiceImpl implements UserService {
         }
 
         return dto;
+    }
+
+    @Override
+    public List<UserDTO> findByCabinetIdAndRole(Long cabinetId, String role) {
+        UserRole userRole;
+        try {
+            userRole = UserRole.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid role: " + role);
+        }
+
+        return userRepository.findByClinicIdAndRole(cabinetId, userRole).stream()
+                .map(user -> {
+                    UserDTO dto = mapToDTO(user);
+                    dto.setClinicId(cabinetId);
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     private UserDTO mapToDTO(User user) {

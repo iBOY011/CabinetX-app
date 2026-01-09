@@ -13,6 +13,9 @@ public class NotificationMapper {
         response.setContent(notification.getContent());
         response.setStatus(notification.getStatus());
         response.setCreationDate(notification.getCreationDate());
+        response.setPatientId(notification.getPatientId());
+        response.setAppointmentId(notification.getAppointmentId());
+        response.setConsultationId(notification.getConsultationId());
         return response;
     }
 }

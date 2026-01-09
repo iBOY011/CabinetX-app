@@ -1,5 +1,6 @@
 package com.gi.appointmentservice.Service;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -34,6 +35,29 @@ public class RDVService {
         if (!rdvreqDto.getHeure_debut().isBefore(rdvreqDto.getHeure_fin())) {
             throw new IllegalArgumentException("La date de début doit être avant la date de fin.");
         }
+        
+        // 2. Ne pas autoriser les rendez-vous dans le passé
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        
+        if (rdvreqDto.getDate().isBefore(today)) {
+            throw new IllegalArgumentException("Impossible de prendre un rendez-vous à une date passée.");
+        }
+        
+        if (rdvreqDto.getDate().isEqual(today) && rdvreqDto.getHeure_debut().isBefore(now)) {
+            throw new IllegalArgumentException("Impossible de prendre un rendez-vous à une heure passée.");
+        }
+
+        // 3. Un même patient ne peut pas avoir deux rendez-vous actifs le même jour
+        List<RendezVous> existingAppointments = rdvRepository.findActiveAppointmentsByPatientAndDate(
+            rdvreqDto.getPatientId(), 
+            rdvreqDto.getDate()
+        );
+        
+        if (!existingAppointments.isEmpty()) {
+            throw new IllegalArgumentException("Ce patient a déjà un rendez-vous programmé pour cette date.");
+        }
+
         // faut regle metier
         RendezVous rdv = new RendezVous();
         rdv = RDVMapper.toEntity(rdvreqDto);
@@ -106,9 +130,7 @@ public class RDVService {
         rdv.setStatutRDV(statut);
 
         rdvRepository.save(rdv);
-        PatientInfoDTO patientInfo = new PatientInfoDTO();
-        patientInfo.setPrenom("Ikrame");
-        patientInfo.setNom("Gouaiche");
+        PatientInfoDTO patientInfo = patientClient.getPatientById(rdv.getPatientId());
         return RDVMapper.toResponse(rdv, patientInfo);
     }
 

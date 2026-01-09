@@ -74,4 +74,12 @@ public class UserController {
         System.out.println(dto);
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/by-cabinet-and-role")
+    public ResponseEntity<List<UserDTO>> getUsersByCabinetAndRole(
+            @RequestParam Long cabinetId,
+            @RequestParam String role) {
+        List<UserDTO> dtos = userService.findByCabinetIdAndRole(cabinetId, role);
+        return ResponseEntity.ok(dtos);
+    }
 }

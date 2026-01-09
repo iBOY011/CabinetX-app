@@ -8,8 +8,11 @@ public interface NotificationService {
 
     NotificationResponse sendSubscriptionExpirationAlert(Long adminId, String clinicName, int daysRemaining);
 
-    NotificationResponse sendPatientConsultationNotification(Long doctorId, Long appointmentId, String patientName,
-            Integer patientAge, String reason, String appointmentTime);
+    NotificationResponse sendPatientConsultationNotification(Long doctorId, Long appointmentId, Long patientId,
+            String patientName, Integer patientAge, String reason, String appointmentTime);
+
+    NotificationResponse sendBillingReadyNotification(Long secretaryId, Long consultationId, Long appointmentId, 
+            Long patientId, String patientName, String diagnostic, String traitement);
 
     NotificationResponse markAsRead(Long notificationId);
 

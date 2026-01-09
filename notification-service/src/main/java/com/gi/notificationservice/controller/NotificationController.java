@@ -34,11 +34,25 @@ public class NotificationController {
     public ResponseEntity<NotificationResponse> sendPatientConsultation(
             @RequestParam Long doctorId,
             @RequestParam Long appointmentId,
+            @RequestParam Long patientId,
             @RequestParam String patientName,
             @RequestParam Integer patientAge,
             @RequestParam String reason,
             @RequestParam String appointmentTime) {
         return ResponseEntity.ok(service.sendPatientConsultationNotification(
-                doctorId, appointmentId, patientName, patientAge, reason, appointmentTime));
+                doctorId, appointmentId, patientId, patientName, patientAge, reason, appointmentTime));
+    }
+
+    @PostMapping("/billing-ready")
+    public ResponseEntity<NotificationResponse> sendBillingReady(
+            @RequestParam Long secretaryId,
+            @RequestParam Long consultationId,
+            @RequestParam Long appointmentId,
+            @RequestParam Long patientId,
+            @RequestParam String patientName,
+            @RequestParam String diagnostic,
+            @RequestParam String traitement) {
+        return ResponseEntity.ok(service.sendBillingReadyNotification(
+                secretaryId, consultationId, appointmentId, patientId, patientName, diagnostic, traitement));
     }
 }

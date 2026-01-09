@@ -34,6 +34,10 @@ import com.gi.consultationservice.mappers.ConsultationMapper;
 import com.gi.consultationservice.messaging.OrdonnanceCountClient;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
+import com.gi.consultationservice.client.AppointmentClient;
+import com.gi.consultationservice.client.NotificationClient;
+import com.gi.consultationservice.client.UserClient;
+import com.gi.consultationservice.client.PatientClient;
 
 @Service
 @Transactional
@@ -47,17 +51,22 @@ public class ConsultationService {
     private final ConsultationMapper consultationMapper;
     private final OrdonnanceCountClient ordonnanceCountClient;
     private final AppointmentClient appointmentClient;
+    private final NotificationClient notificationClient;
+    private final UserClient userClient;
+    private final PatientClient patientClient;
 
     public ConsultationService(ConsultationRepository consultationRepository,
                                ConsultationEventRepository eventRepository,
                                ConsultationMapper consultationMapper,
                                OrdonnanceCountClient ordonnanceCountClient,
-                               AppointmentClient appointmentClient) {
+                               PatientClient patientClient) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
-        this.consultationMapper = consultationMapper;
         this.ordonnanceCountClient = ordonnanceCountClient;
         this.appointmentClient = appointmentClient;
+        this.notificationClient = notificationClient;
+        this.userClient = userClient;
+        this.patientClient = patientClient;
     }
 
     public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
@@ -71,31 +80,28 @@ public class ConsultationService {
     }
 
     public ConsultationDTO modifierConsultation(Long id, ConsultationDTO dto) {
+        System.out.println("[ConsultationService] Modifying consultation ID: " + id);
+        System.out.println("[ConsultationService] DTO: " + dto);
         Consultation existing = chargerConsultation(id);
-        boolean wasArchived = Boolean.TRUE.equals(existing.getArchived());
+        System.out.println("[ConsultationService] Existing consultation: " + existing);
+        System.out.println("[ConsultationService] Existing.archived: " + existing.getArchived());
+        boolean wasNotArchived = existing.getArchived() == null || !existing.getArchived();
+        System.out.println("[ConsultationService] wasNotArchived: " + wasNotArchived);
         appliquerChangements(existing, dto);
-        if (Boolean.TRUE.equals(existing.getArchived()) && existing.getArchivedAt() == null) {
-            existing.setArchivedAt(ZonedDateTime.now(DEFAULT_ZONE_OFFSET));
-        }
+        System.out.println("[ConsultationService] After applying changes: " + existing);
+        System.out.println("[ConsultationService] Updated.archived: " + existing.getArchived());
         Consultation updated = consultationRepository.save(existing);
-        boolean nowArchived = Boolean.TRUE.equals(updated.getArchived());
-        if (!wasArchived && nowArchived) {
-            if (updated.getRendezVousId() == null) {
-                LOGGER.warn("kafk-cons-rdv | rendezVousId manquant pour consultation {}: impossible de terminer le RDV", updated.getId());
-            } else {
-                OffsetDateTime completedAt = updated.getArchivedAt() != null
-                    ? updated.getArchivedAt().toOffsetDateTime()
-                    : OffsetDateTime.now(DEFAULT_ZONE_OFFSET);
-                LOGGER.info("kafk-cons-rdv | appel appointment-service pour terminer rendezVous={} (consultation={} patient={} medecin={} completedAt={})",
-                    updated.getRendezVousId(), updated.getId(), updated.getPatientId(), updated.getMedecinId(), completedAt);
-                try {
-                    appointmentClient.updateStatus(updated.getRendezVousId(), "TERMINE");
-                    LOGGER.info("kafk-cons-rdv | rendezVous {} marqué TERMINE via appointment-service", updated.getRendezVousId());
-                } catch (Exception ex) {
-                    LOGGER.warn("kafk-cons-rdv | échec appel appointment-service pour rendezVous {}", updated.getRendezVousId(), ex);
-                }
-            }
+        System.out.println("[ConsultationService] Saved consultation: " + updated);
+        
+        // If consultation is being archived (terminated), trigger notifications
+        System.out.println("[ConsultationService] Check completion: wasNotArchived=" + wasNotArchived + ", dto.archived=" + dto.getArchived());
+        if (wasNotArchived && dto.getArchived() != null && dto.getArchived()) {
+            System.out.println("[ConsultationService] Triggering handleConsultationCompletion...");
+            handleConsultationCompletion(updated);
+        } else {
+            System.out.println("[ConsultationService] Skipping handleConsultationCompletion");
         }
+        
         return consultationMapper.toDTO(updated);
     }
 
@@ -292,5 +298,55 @@ public class ConsultationService {
 
     private Specification<Consultation> specDateBetween(OffsetDateTime debut, OffsetDateTime fin) {
         return (root, query, cb) -> cb.between(root.get("dateConsultation"), debut, fin);
+    }
+
+    private void handleConsultationCompletion(Consultation consultation) {
+        System.out.println("[ConsultationService] ===== HANDLING CONSULTATION COMPLETION =====");
+        System.out.println("[ConsultationService] Consultation ID: " + consultation.getId());
+        System.out.println("[ConsultationService] Patient ID: " + consultation.getPatientId());
+        System.out.println("[ConsultationService] Cabinet ID: " + consultation.getCabinetId());
+        System.out.println("[ConsultationService] RendezVous ID: " + consultation.getRendezVousId());
+        try {
+            // 1. Mark appointment as completed
+            if (consultation.getRendezVousId() != null) {
+                System.out.println("[ConsultationService] Marking appointment " + consultation.getRendezVousId() + " as completed...");
+                appointmentClient.markAppointmentAsCompleted(consultation.getRendezVousId());
+                System.out.println("[ConsultationService] ✓ Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
+            } else {
+                System.out.println("[ConsultationService] ⚠ No rendezVousId, skipping appointment update");
+            }
+
+            // 2. Get patient info
+            System.out.println("[ConsultationService] Fetching patient info for ID: " + consultation.getPatientId());
+            PatientClient.PatientDTO patient = patientClient.getPatientById(consultation.getPatientId());
+            String patientName = patient.getPrenom() + " " + patient.getNom();
+            System.out.println("[ConsultationService] ✓ Patient: " + patientName);
+
+            // 3. Get all secretaries in the same cabinet
+            System.out.println("[ConsultationService] Fetching secretaries for cabinet ID: " + consultation.getCabinetId());
+            List<UserClient.UserDTO> secretaries = userClient.getUsersByCabinetAndRole(
+                    consultation.getCabinetId(), "secretaire");
+            System.out.println("[ConsultationService] ✓ Found " + secretaries.size() + " secretary/secretaries");
+
+            // 4. Send notification to each secretary
+            for (UserClient.UserDTO secretary : secretaries) {
+                System.out.println("[ConsultationService] Sending billing notification to secretary " + secretary.getId() + " (" + secretary.getEmail() + ")");
+                notificationClient.sendBillingReadyNotification(
+                        secretary.getId(),
+                        consultation.getId(),
+                        consultation.getRendezVousId(),
+                        consultation.getPatientId(),
+                        patientName,
+                        consultation.getDiagnostic(),
+                        consultation.getTraitement()
+                );
+                System.out.println("[ConsultationService] ✓ Sent billing notification to secretary " + secretary.getId());
+            }
+            System.out.println("[ConsultationService] ===== CONSULTATION COMPLETION HANDLED SUCCESSFULLY =====");
+        } catch (Exception e) {
+            System.err.println("[ConsultationService] Error handling consultation completion: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw - we don't want to rollback the consultation update if notifications fail
+        }
     }
 }

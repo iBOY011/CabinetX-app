@@ -39,6 +39,7 @@ public class SecurityConfig {
         // Conditionally apply OAuth2 configuration
         if (isOAuth2Enabled()) {
             http
+                    .authorizeHttpRequests(ar -> ar.requestMatchers("/api/clinic/**").permitAll()) // Allow service-to-service calls
                     .authorizeHttpRequests(ar -> ar.requestMatchers("/api/**").hasAuthority("ADMIN"))
                     .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
                     .oauth2ResourceServer(o2 -> o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));

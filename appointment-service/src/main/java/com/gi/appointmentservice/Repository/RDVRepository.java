@@ -19,6 +19,12 @@ public interface RDVRepository extends JpaRepository<RendezVous, Long> {
 
     List<RendezVous> findByDateAndCabinetId(LocalDate date, Long cabinetId);
 
+    // Query to find active appointments by patient and date
+    @Query("SELECT r FROM RendezVous r WHERE r.patientId = :patientId AND r.date = :date " +
+            "AND r.statutRDV NOT IN (com.gi.appointmentservice.Model.Enum.StatutRDV.ANNULE)")
+    List<RendezVous> findActiveAppointmentsByPatientAndDate(@Param("patientId") Long patientId,
+                                                             @Param("date") LocalDate date);
+
     // Queue management queries
     List<RendezVous> findByCabinetIdAndDateAndStatutRDV(Long cabinetId, LocalDate date, StatutRDV statutRDV);
 
