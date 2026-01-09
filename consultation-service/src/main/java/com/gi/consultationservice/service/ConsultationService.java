@@ -59,9 +59,13 @@ public class ConsultationService {
                                ConsultationEventRepository eventRepository,
                                ConsultationMapper consultationMapper,
                                OrdonnanceCountClient ordonnanceCountClient,
+                               AppointmentClient appointmentClient,
+                               NotificationClient notificationClient,
+                               UserClient userClient,
                                PatientClient patientClient) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
+        this.consultationMapper = consultationMapper;
         this.ordonnanceCountClient = ordonnanceCountClient;
         this.appointmentClient = appointmentClient;
         this.notificationClient = notificationClient;

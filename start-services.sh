@@ -14,11 +14,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Memory optimization settings
-SMALL_SERVICE_OPTS="-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
-MEDIUM_SERVICE_OPTS="-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
-LARGE_SERVICE_OPTS="-Xms512m -Xmx1024m -XX:MaxMetaspaceSize=256m"
-GATEWAY_SERVICE_OPTS="-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
-COMMON_OPTS="-XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication"
+SMALL_SERVICE_OPTS="-Xms128m -Xmx384m -XX:MaxMetaspaceSize=128m"
+MEDIUM_SERVICE_OPTS="-Xms256m -Xmx768m -XX:MaxMetaspaceSize=256m"
+LARGE_SERVICE_OPTS="-Xms512m -Xmx1536m -XX:MaxMetaspaceSize=256m"
+GATEWAY_SERVICE_OPTS="-Xms256m -Xmx768m -XX:MaxMetaspaceSize=256m"
+COMMON_OPTS="-XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError"
 
 # Array to track service status with memory configuration
 declare -A service_memory=(
