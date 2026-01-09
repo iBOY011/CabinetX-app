@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 @FeignClient(name = "appointment-service")
 public interface AppointmentClient {
     
-    @PutMapping("/api/rdv/{id}/status/TERMINE")
+    @PutMapping("/api/appointments/updateStatus/{id}/TERMINE")
     void markAppointmentAsCompleted(@PathVariable("id") Long appointmentId);
 }
