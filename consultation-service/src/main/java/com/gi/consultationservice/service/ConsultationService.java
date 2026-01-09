@@ -3,26 +3,30 @@ package com.gi.consultationservice.service;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.OptionalLong;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.gi.consultationservice.client.AppointmentClient;
 import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
-import com.gi.consultationservice.dto.MedecinWeeklyStatsDTO;
 import com.gi.consultationservice.dto.DailyStatDTO;
+import com.gi.consultationservice.dto.MedecinWeeklyStatsDTO;
 import com.gi.consultationservice.entities.Consultation;
 import com.gi.consultationservice.entities.ConsultationCreatedEvent;
 import com.gi.consultationservice.enums.ConsultationType;
@@ -36,20 +40,24 @@ import com.gi.consultationservice.repository.ConsultationRepository;
 public class ConsultationService {
 
     private static final ZoneOffset DEFAULT_ZONE_OFFSET = ZoneOffset.UTC;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsultationService.class);
 
     private final ConsultationRepository consultationRepository;
     private final ConsultationEventRepository eventRepository;
     private final ConsultationMapper consultationMapper;
     private final OrdonnanceCountClient ordonnanceCountClient;
+    private final AppointmentClient appointmentClient;
 
     public ConsultationService(ConsultationRepository consultationRepository,
                                ConsultationEventRepository eventRepository,
                                ConsultationMapper consultationMapper,
-                               OrdonnanceCountClient ordonnanceCountClient) {
+                               OrdonnanceCountClient ordonnanceCountClient,
+                               AppointmentClient appointmentClient) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
         this.ordonnanceCountClient = ordonnanceCountClient;
+        this.appointmentClient = appointmentClient;
     }
 
     public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
@@ -64,8 +72,30 @@ public class ConsultationService {
 
     public ConsultationDTO modifierConsultation(Long id, ConsultationDTO dto) {
         Consultation existing = chargerConsultation(id);
+        boolean wasArchived = Boolean.TRUE.equals(existing.getArchived());
         appliquerChangements(existing, dto);
+        if (Boolean.TRUE.equals(existing.getArchived()) && existing.getArchivedAt() == null) {
+            existing.setArchivedAt(ZonedDateTime.now(DEFAULT_ZONE_OFFSET));
+        }
         Consultation updated = consultationRepository.save(existing);
+        boolean nowArchived = Boolean.TRUE.equals(updated.getArchived());
+        if (!wasArchived && nowArchived) {
+            if (updated.getRendezVousId() == null) {
+                LOGGER.warn("kafk-cons-rdv | rendezVousId manquant pour consultation {}: impossible de terminer le RDV", updated.getId());
+            } else {
+                OffsetDateTime completedAt = updated.getArchivedAt() != null
+                    ? updated.getArchivedAt().toOffsetDateTime()
+                    : OffsetDateTime.now(DEFAULT_ZONE_OFFSET);
+                LOGGER.info("kafk-cons-rdv | appel appointment-service pour terminer rendezVous={} (consultation={} patient={} medecin={} completedAt={})",
+                    updated.getRendezVousId(), updated.getId(), updated.getPatientId(), updated.getMedecinId(), completedAt);
+                try {
+                    appointmentClient.updateStatus(updated.getRendezVousId(), "TERMINE");
+                    LOGGER.info("kafk-cons-rdv | rendezVous {} marqué TERMINE via appointment-service", updated.getRendezVousId());
+                } catch (Exception ex) {
+                    LOGGER.warn("kafk-cons-rdv | échec appel appointment-service pour rendezVous {}", updated.getRendezVousId(), ex);
+                }
+            }
+        }
         return consultationMapper.toDTO(updated);
     }
 
@@ -199,19 +229,35 @@ public class ConsultationService {
     }
 
     private void appliquerChangements(Consultation consultation, ConsultationDTO dto) {
-        consultation.setRendezVousId(dto.getRendezVousId());
-        consultation.setPatientId(dto.getPatientId());
-        consultation.setMedecinId(dto.getMedecinId());
-        consultation.setCabinetId(dto.getCabinetId());
-        consultation.setType(dto.getType());
-        consultation.setDateConsultation(dto.getDateConsultation());
+        if (dto.getRendezVousId() != null) {
+            consultation.setRendezVousId(dto.getRendezVousId());
+        }
+        if (dto.getPatientId() != null) {
+            consultation.setPatientId(dto.getPatientId());
+        }
+        if (dto.getMedecinId() != null) {
+            consultation.setMedecinId(dto.getMedecinId());
+        }
+        if (dto.getCabinetId() != null) {
+            consultation.setCabinetId(dto.getCabinetId());
+        }
+        if (dto.getType() != null) {
+            consultation.setType(dto.getType());
+        }
+        if (dto.getDateConsultation() != null) {
+            consultation.setDateConsultation(dto.getDateConsultation());
+        }
         consultation.setExamenClinique(dto.getExamenClinique());
         consultation.setExamenSupplementaire(dto.getExamenSupplementaire());
         consultation.setDiagnostic(dto.getDiagnostic());
         consultation.setTraitement(dto.getTraitement());
         consultation.setObservations(dto.getObservations());
-        consultation.setArchived(dto.getArchived());
-        consultation.setArchivedAt(dto.getArchivedAt());
+        if (dto.getArchived() != null) {
+            consultation.setArchived(dto.getArchived());
+        }
+        if (dto.getArchivedAt() != null || Boolean.FALSE.equals(dto.getArchived())) {
+            consultation.setArchivedAt(dto.getArchivedAt());
+        }
     }
 
     private void enregistrerCreation(Consultation consultation) {
