@@ -18,6 +18,35 @@ public class UserController {
 
     private final UserService userService;
 
+    // Specific paths first (before /{id} to avoid path collision)
+    @GetMapping("/by-cabinet-and-role")
+    public ResponseEntity<List<UserDTO>> getUsersByCabinetAndRole(
+            @RequestParam Long cabinetId,
+            @RequestParam String role) {
+        List<UserDTO> dtos = userService.findByCabinetIdAndRole(cabinetId, role);
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/clinic/{clinicId}")
+    public ResponseEntity<List<UserDTO>> listByClinic(@PathVariable Long clinicId) {
+        List<UserDTO> dtos = userService.listByClinic(clinicId);
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/role/{role}")
+    public ResponseEntity<List<UserDTO>> listByRole(@PathVariable UserRole role) {
+        List<UserDTO> dtos = userService.listByRole(role);
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/login/{login}")
+    public ResponseEntity<UserDTO> getUserByLogin(@PathVariable String login) {
+        System.out.println("getUserByLogin" + login);
+        UserDTO dto = userService.findByLogin(login);
+        System.out.println(dto);
+        return ResponseEntity.ok(dto);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserRequest request) {
@@ -25,6 +54,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    // Generic /{id} path last to avoid catching specific paths
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         UserDTO dto = userService.findById(id);
@@ -53,33 +83,5 @@ public class UserController {
     public ResponseEntity<UserDTO> deactivateUser(@PathVariable Long id) {
         UserDTO dto = userService.deactivateUser(id);
         return ResponseEntity.ok(dto);
-    }
-
-    @GetMapping("/clinic/{clinicId}")
-    public ResponseEntity<List<UserDTO>> listByClinic(@PathVariable Long clinicId) {
-        List<UserDTO> dtos = userService.listByClinic(clinicId);
-        return ResponseEntity.ok(dtos);
-    }
-
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<UserDTO>> listByRole(@PathVariable UserRole role) {
-        List<UserDTO> dtos = userService.listByRole(role);
-        return ResponseEntity.ok(dtos);
-    }
-
-    @GetMapping("/login/{login}")
-    public ResponseEntity<UserDTO> getUserByLogin(@PathVariable String login) {
-        System.out.println("getUserByLogin" + login);
-        UserDTO dto = userService.findByLogin(login);
-        System.out.println(dto);
-        return ResponseEntity.ok(dto);
-    }
-
-    @GetMapping("/by-cabinet-and-role")
-    public ResponseEntity<List<UserDTO>> getUsersByCabinetAndRole(
-            @RequestParam Long cabinetId,
-            @RequestParam String role) {
-        List<UserDTO> dtos = userService.findByCabinetIdAndRole(cabinetId, role);
-        return ResponseEntity.ok(dtos);
     }
 }
