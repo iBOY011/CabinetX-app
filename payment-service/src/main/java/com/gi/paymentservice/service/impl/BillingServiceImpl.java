@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.gi.paymentservice.client.ClinicClient;
 import com.gi.paymentservice.client.StripeClient;
 import com.gi.paymentservice.config.StripeProperties;
 import com.gi.paymentservice.exception.ResourceNotFoundException;
@@ -59,6 +60,7 @@ public class BillingServiceImpl implements BillingService {
     private final BillingSubscriptionRepository subscriptionRepository;
     private final SubscriptionPaymentRepository paymentRepository;
     private final SubscriptionPaymentMapper paymentMapper;
+    private final ClinicClient clinicClient;
 
     @Override
     @Transactional
@@ -300,7 +302,8 @@ public class BillingServiceImpl implements BillingService {
         entity.setPlanName(StringUtils.hasText(stripePlanName)
             ? stripePlanName
             : resolvePlanNameFromPriceId(entity.getPriceId()));
-        entity.setStatus(mapSubscriptionStatus(stripeSubscription.getStatus()));
+        SubscriptionStatus subscriptionStatus = mapSubscriptionStatus(stripeSubscription.getStatus());
+        entity.setStatus(subscriptionStatus);
         entity.setCurrentPeriodStart(epochToLocalDateTime(stripeSubscription.getCurrentPeriodStart()));
         entity.setCurrentPeriodEnd(epochToLocalDateTime(stripeSubscription.getCurrentPeriodEnd()));
         entity.setAutoRenew(!Boolean.TRUE.equals(stripeSubscription.getCancelAtPeriodEnd()));
@@ -312,7 +315,9 @@ public class BillingServiceImpl implements BillingService {
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(LocalDateTime.now());
         }
-        return subscriptionRepository.save(entity);
+        BillingSubscription saved = subscriptionRepository.save(entity);
+        syncClinicStatus(saved.getCabinetId(), subscriptionStatus == SubscriptionStatus.ACTIVE);
+        return saved;
     }
 
     private void upsertInvoice(Invoice invoice, Long cabinetId) {
@@ -356,11 +361,18 @@ public class BillingServiceImpl implements BillingService {
         if (payment.getPaymentType() == null) {
             payment.setPaymentType(PaymentType.SUBSCRIPTION_CABINET);
         }
-        payment.setStatus(mapInvoiceStatus(invoice.getStatus()));
-        if (payment.getStatus() == PaymentStatus.SUCCESSFUL) {
+        PaymentStatus paymentStatus = mapInvoiceStatus(invoice.getStatus());
+        payment.setStatus(paymentStatus);
+        if (paymentStatus == PaymentStatus.SUCCESSFUL) {
             payment.setPaidAt(LocalDateTime.now());
         }
         paymentRepository.save(payment);
+
+        if (paymentStatus == PaymentStatus.SUCCESSFUL) {
+            syncClinicStatus(cabinetId, true);
+        } else if (paymentStatus == PaymentStatus.CANCELLED || paymentStatus == PaymentStatus.FAILED) {
+            syncClinicStatus(cabinetId, false);
+        }
     }
 
     private BillingCustomer ensureCustomer(BillingCustomerRequest request) {
@@ -429,6 +441,21 @@ public class BillingServiceImpl implements BillingService {
         } catch (Exception e) {
             log.warn("Failed to deserialize event {} to {}", event.getId(), clazz.getSimpleName(), e);
             return null;
+        }
+    }
+
+    private void syncClinicStatus(Long cabinetId, boolean active) {
+        if (cabinetId == null) {
+            return;
+        }
+        try {
+            if (active) {
+                clinicClient.activateClinic(cabinetId);
+            } else {
+                clinicClient.deactivateClinic(cabinetId);
+            }
+        } catch (Exception e) {
+            log.warn("[Billing] Failed to sync clinic status for cabinet {} to {}: {}", cabinetId, active ? "ACTIVE" : "INACTIVE", e.getMessage());
         }
     }
 
