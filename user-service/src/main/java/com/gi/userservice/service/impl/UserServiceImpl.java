@@ -271,7 +271,24 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Invalid role: " + role);
         }
 
-        return userRepository.findByClinicIdAndRole(cabinetId, userRole).stream()
+        List<Long> userIds;
+        
+        // Query profiles by clinicId to get user IDs
+        if (userRole == UserRole.MEDCIN) {
+            userIds = doctorProfileRepository.findByClinicId(cabinetId).stream()
+                    .map(DoctorProfile::getUserId)
+                    .collect(Collectors.toList());
+        } else if (userRole == UserRole.SECRETAIRE) {
+            userIds = secretaryProfileRepository.findByClinicId(cabinetId).stream()
+                    .map(SecretaryProfile::getUserId)
+                    .collect(Collectors.toList());
+        } else {
+            throw new RuntimeException("Role " + role + " does not have clinic association");
+        }
+
+        // Fetch users by IDs and filter by role
+        return userRepository.findAllById(userIds).stream()
+                .filter(user -> user.getRole() == userRole)
                 .map(user -> {
                     UserDTO dto = mapToDTO(user);
                     dto.setClinicId(cabinetId);
