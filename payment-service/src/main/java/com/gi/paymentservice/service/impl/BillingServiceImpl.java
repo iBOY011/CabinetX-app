@@ -1,5 +1,20 @@
 package com.gi.paymentservice.service.impl;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.gi.paymentservice.client.StripeClient;
 import com.gi.paymentservice.config.StripeProperties;
 import com.gi.paymentservice.exception.ResourceNotFoundException;
@@ -16,6 +31,7 @@ import com.gi.paymentservice.model.entity.BillingCustomer;
 import com.gi.paymentservice.model.entity.BillingSubscription;
 import com.gi.paymentservice.model.entity.SubscriptionPayment;
 import com.gi.paymentservice.model.enums.PaymentStatus;
+import com.gi.paymentservice.model.enums.PaymentType;
 import com.gi.paymentservice.model.enums.SubscriptionStatus;
 import com.gi.paymentservice.repository.BillingCustomerRepository;
 import com.gi.paymentservice.repository.BillingSubscriptionRepository;
@@ -28,22 +44,9 @@ import com.stripe.model.Invoice;
 import com.stripe.model.InvoiceCollection;
 import com.stripe.model.Subscription;
 import com.stripe.net.ApiResource;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -87,10 +90,22 @@ public class BillingServiceImpl implements BillingService {
         subscription.setUpdatedAt(LocalDateTime.now());
         subscription = subscriptionRepository.save(subscription);
 
-        String sessionId = stripeClient.createCheckoutSessionId(subscription.getId().toString());
-        subscription.setCheckoutSessionId(sessionId);
-        subscriptionRepository.save(subscription);
-        return new CheckoutSessionResponse(sessionId, null);
+        try {
+            com.stripe.model.checkout.Session session = stripeClient.createCheckoutSession(
+                customer.getStripeCustomerId(),
+                request.getPriceId(),
+                request.getCabinetId(),
+                request.getSuccessUrl(),
+                request.getCancelUrl()
+            );
+            subscription.setCheckoutSessionId(session.getId());
+            subscriptionRepository.save(subscription);
+            log.info("[Billing] Created Stripe checkout session {} for cabinet {}", session.getId(), request.getCabinetId());
+            return new CheckoutSessionResponse(session.getId(), session.getUrl());
+        } catch (Exception e) {
+            log.error("[Billing] Failed to create Stripe checkout session for cabinet {}: {}", request.getCabinetId(), e.getMessage());
+            throw new RuntimeException("Failed to create checkout session", e);
+        }
     }
 
     @Override
@@ -153,21 +168,41 @@ public class BillingServiceImpl implements BillingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<SubscriptionPaymentDTO> getInvoices(Long cabinetId) {
-        BillingCustomer customer = customerRepository.findByCabinetId(cabinetId)
-            .orElseThrow(() -> new ResourceNotFoundException("No Stripe customer for cabinet " + cabinetId));
-
+        log.info("[Billing] getInvoices for cabinet {}", cabinetId);
+        Optional<BillingCustomer> customerOpt = customerRepository.findByCabinetId(cabinetId);
+        
+        if (customerOpt.isEmpty()) {
+            log.info("[Billing] No Stripe customer yet for cabinet {}, returning empty invoices list", cabinetId);
+            return List.of();
+        }
+        
+        BillingCustomer customer = customerOpt.get();
+        log.info("[Billing] Found customer {} for cabinet {}", customer.getStripeCustomerId(), cabinetId);
+        
         try {
+            log.info("[Billing] Fetching invoices from Stripe for customer {}", customer.getStripeCustomerId());
             InvoiceCollection invoices = stripeClient.listInvoicesForCustomer(customer.getStripeCustomerId(), 25L);
-            invoices.getData().forEach(invoice -> upsertInvoice(invoice, cabinetId));
+            log.info("[Billing] Received {} invoices from Stripe", invoices.getData().size());
+            invoices.getData().forEach(invoice -> {
+                try {
+                    upsertInvoice(invoice, cabinetId);
+                } catch (Exception e) {
+                    log.error("[Billing] Failed to upsert invoice {} for cabinet {}: {}", invoice.getId(), cabinetId, e.getMessage(), e);
+                }
+            });
         } catch (StripeException e) {
-            log.warn("Unable to sync invoices from Stripe", e);
+            log.error("[Billing] Stripe API error for cabinet {}: {}", cabinetId, e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("[Billing] Unexpected error syncing invoices for cabinet {}: {}", cabinetId, e.getMessage(), e);
         }
 
-        return paymentRepository.findByCabinetIdOrderByCreatedAtDesc(cabinetId).stream()
+        List<SubscriptionPaymentDTO> payments = paymentRepository.findByCabinetIdOrderByCreatedAtDesc(cabinetId).stream()
             .map(paymentMapper::toDTO)
             .toList();
+        log.info("[Billing] Returning {} payments for cabinet {}", payments.size(), cabinetId);
+        return payments;
     }
 
     @Override
@@ -216,6 +251,14 @@ public class BillingServiceImpl implements BillingService {
         }
     }
 
+    @Override
+    @Transactional
+    public void purgeSubscription(Long cabinetId) {
+        paymentRepository.deleteAll(paymentRepository.findByCabinetId(cabinetId));
+        subscriptionRepository.findByCabinetId(cabinetId)
+            .ifPresent(subscriptionRepository::delete);
+    }
+
     private void handleInvoiceEvent(Event event) {
         Invoice invoice = deserialize(event, Invoice.class);
         if (invoice == null) {
@@ -248,10 +291,15 @@ public class BillingServiceImpl implements BillingService {
     private BillingSubscription updateSubscriptionFromStripe(BillingSubscription entity, Subscription stripeSubscription) {
         entity.setStripeSubscriptionId(stripeSubscription.getId());
         entity.setStripeCustomerId(stripeSubscription.getCustomer());
-        entity.setPlanName(stripeSubscription.getItems().getData().isEmpty() ? entity.getPlanName() :
-            stripeSubscription.getItems().getData().getFirst().getPrice().getNickname());
-        entity.setPriceId(stripeSubscription.getItems().getData().isEmpty() ? entity.getPriceId() :
-            stripeSubscription.getItems().getData().getFirst().getPrice().getId());
+        String stripePlanName = stripeSubscription.getItems().getData().isEmpty() ? null :
+            stripeSubscription.getItems().getData().getFirst().getPrice().getNickname();
+        String stripePriceId = stripeSubscription.getItems().getData().isEmpty() ? null :
+            stripeSubscription.getItems().getData().getFirst().getPrice().getId();
+
+        entity.setPriceId(stripePriceId != null ? stripePriceId : entity.getPriceId());
+        entity.setPlanName(StringUtils.hasText(stripePlanName)
+            ? stripePlanName
+            : resolvePlanNameFromPriceId(entity.getPriceId()));
         entity.setStatus(mapSubscriptionStatus(stripeSubscription.getStatus()));
         entity.setCurrentPeriodStart(epochToLocalDateTime(stripeSubscription.getCurrentPeriodStart()));
         entity.setCurrentPeriodEnd(epochToLocalDateTime(stripeSubscription.getCurrentPeriodEnd()));
@@ -269,14 +317,22 @@ public class BillingServiceImpl implements BillingService {
 
     private void upsertInvoice(Invoice invoice, Long cabinetId) {
         BillingSubscription subscription = subscriptionRepository.findByStripeSubscriptionId(invoice.getSubscription())
-            .orElseGet(() -> BillingSubscription.builder()
-                .cabinetId(cabinetId)
-                .stripeCustomerId(invoice.getCustomer())
-                .stripeSubscriptionId(invoice.getSubscription())
-                .status(SubscriptionStatus.PENDING)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build());
+            .orElseGet(() -> subscriptionRepository.findByCabinetId(cabinetId)
+                .orElseGet(() -> BillingSubscription.builder()
+                    .cabinetId(cabinetId)
+                    .stripeCustomerId(invoice.getCustomer())
+                    .stripeSubscriptionId(invoice.getSubscription())
+                    .status(SubscriptionStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build()));
+        
+        if (subscription.getStripeSubscriptionId() == null) {
+            subscription.setStripeSubscriptionId(invoice.getSubscription());
+        }
+        if (subscription.getStripeCustomerId() == null) {
+            subscription.setStripeCustomerId(invoice.getCustomer());
+        }
         subscriptionRepository.save(subscription);
 
         SubscriptionPayment payment = paymentRepository.findByStripeInvoiceId(invoice.getId())
@@ -294,6 +350,12 @@ public class BillingServiceImpl implements BillingService {
         payment.setInvoiceUrl(invoice.getHostedInvoiceUrl());
         payment.setPeriodStart(epochToLocalDate(invoice.getPeriodStart()));
         payment.setPeriodEnd(epochToLocalDate(invoice.getPeriodEnd()));
+        if (payment.getDoctorId() == null) {
+            payment.setDoctorId(subscription.getCabinetId());
+        }
+        if (payment.getPaymentType() == null) {
+            payment.setPaymentType(PaymentType.SUBSCRIPTION_CABINET);
+        }
         payment.setStatus(mapInvoiceStatus(invoice.getStatus()));
         if (payment.getStatus() == PaymentStatus.SUCCESSFUL) {
             payment.setPaidAt(LocalDateTime.now());
@@ -400,6 +462,17 @@ public class BillingServiceImpl implements BillingService {
         }
         StripeProperties.Plan plan = stripeProperties.getPlans().get(planId);
         return plan != null ? plan.getPriceId() : null;
+    }
+
+    private String resolvePlanNameFromPriceId(String priceId) {
+        if (!StringUtils.hasText(priceId)) {
+            return null;
+        }
+        return stripeProperties.getPlans().values().stream()
+            .filter(plan -> priceId.equals(plan.getPriceId()))
+            .map(StripeProperties.Plan::getName)
+            .findFirst()
+            .orElse(null);
     }
 
     private String resolvePlanName(String planId, String priceId) {
