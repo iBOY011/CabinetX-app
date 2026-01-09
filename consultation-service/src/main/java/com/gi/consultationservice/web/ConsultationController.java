@@ -48,8 +48,17 @@ public class ConsultationController {
 
     @PutMapping("/{id}")
     public ConsultationDTO modifierConsultation(@PathVariable Long id, @RequestBody @Valid ConsultationDTO dto) {
-        System.out.println("Modifying consultation ID " + id + " with data: " + dto);
-        return consultationService.modifierConsultation(id, dto);
+        System.out.println("[ConsultationController] ===== PUT /api/consultations/" + id + " =====");
+        System.out.println("[ConsultationController] Received DTO: " + dto);
+        System.out.println("[ConsultationController] PatientId: " + dto.getPatientId());
+        System.out.println("[ConsultationController] MedecinId: " + dto.getMedecinId());
+        System.out.println("[ConsultationController] CabinetId: " + dto.getCabinetId());
+        System.out.println("[ConsultationController] RendezVousId: " + dto.getRendezVousId());
+        System.out.println("[ConsultationController] Type: " + dto.getType());
+        System.out.println("[ConsultationController] Archived: " + dto.getArchived());
+        ConsultationDTO result = consultationService.modifierConsultation(id, dto);
+        System.out.println("[ConsultationController] Returning: " + result);
+        return result;
     }
 
     @DeleteMapping("/{id}")
