@@ -79,14 +79,26 @@ public class ConsultationService {
     }
 
     public ConsultationDTO modifierConsultation(Long id, ConsultationDTO dto) {
+        System.out.println("[ConsultationService] Modifying consultation ID: " + id);
+        System.out.println("[ConsultationService] DTO: " + dto);
         Consultation existing = chargerConsultation(id);
-        boolean wasNotArchived = !existing.getArchived();
+        System.out.println("[ConsultationService] Existing consultation: " + existing);
+        System.out.println("[ConsultationService] Existing.archived: " + existing.getArchived());
+        boolean wasNotArchived = existing.getArchived() == null || !existing.getArchived();
+        System.out.println("[ConsultationService] wasNotArchived: " + wasNotArchived);
         appliquerChangements(existing, dto);
+        System.out.println("[ConsultationService] After applying changes: " + existing);
+        System.out.println("[ConsultationService] Updated.archived: " + existing.getArchived());
         Consultation updated = consultationRepository.save(existing);
+        System.out.println("[ConsultationService] Saved consultation: " + updated);
         
         // If consultation is being archived (terminated), trigger notifications
+        System.out.println("[ConsultationService] Check completion: wasNotArchived=" + wasNotArchived + ", dto.archived=" + dto.getArchived());
         if (wasNotArchived && dto.getArchived() != null && dto.getArchived()) {
+            System.out.println("[ConsultationService] Triggering handleConsultationCompletion...");
             handleConsultationCompletion(updated);
+        } else {
+            System.out.println("[ConsultationService] Skipping handleConsultationCompletion");
         }
         
         return consultationMapper.toDTO(updated);
@@ -272,23 +284,36 @@ public class ConsultationService {
     }
 
     private void handleConsultationCompletion(Consultation consultation) {
+        System.out.println("[ConsultationService] ===== HANDLING CONSULTATION COMPLETION =====");
+        System.out.println("[ConsultationService] Consultation ID: " + consultation.getId());
+        System.out.println("[ConsultationService] Patient ID: " + consultation.getPatientId());
+        System.out.println("[ConsultationService] Cabinet ID: " + consultation.getCabinetId());
+        System.out.println("[ConsultationService] RendezVous ID: " + consultation.getRendezVousId());
         try {
             // 1. Mark appointment as completed
             if (consultation.getRendezVousId() != null) {
+                System.out.println("[ConsultationService] Marking appointment " + consultation.getRendezVousId() + " as completed...");
                 appointmentClient.markAppointmentAsCompleted(consultation.getRendezVousId());
-                System.out.println("[ConsultationService] Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
+                System.out.println("[ConsultationService] ✓ Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
+            } else {
+                System.out.println("[ConsultationService] ⚠ No rendezVousId, skipping appointment update");
             }
 
             // 2. Get patient info
+            System.out.println("[ConsultationService] Fetching patient info for ID: " + consultation.getPatientId());
             PatientClient.PatientDTO patient = patientClient.getPatientById(consultation.getPatientId());
             String patientName = patient.getPrenom() + " " + patient.getNom();
+            System.out.println("[ConsultationService] ✓ Patient: " + patientName);
 
             // 3. Get all secretaries in the same cabinet
+            System.out.println("[ConsultationService] Fetching secretaries for cabinet ID: " + consultation.getCabinetId());
             List<UserClient.UserDTO> secretaries = userClient.getUsersByCabinetAndRole(
                     consultation.getCabinetId(), "secretaire");
+            System.out.println("[ConsultationService] ✓ Found " + secretaries.size() + " secretary/secretaries");
 
             // 4. Send notification to each secretary
             for (UserClient.UserDTO secretary : secretaries) {
+                System.out.println("[ConsultationService] Sending billing notification to secretary " + secretary.getId() + " (" + secretary.getEmail() + ")");
                 notificationClient.sendBillingReadyNotification(
                         secretary.getId(),
                         consultation.getId(),
@@ -298,8 +323,9 @@ public class ConsultationService {
                         consultation.getDiagnostic(),
                         consultation.getTraitement()
                 );
-                System.out.println("[ConsultationService] Sent billing notification to secretary " + secretary.getId());
+                System.out.println("[ConsultationService] ✓ Sent billing notification to secretary " + secretary.getId());
             }
+            System.out.println("[ConsultationService] ===== CONSULTATION COMPLETION HANDLED SUCCESSFULLY =====");
         } catch (Exception e) {
             System.err.println("[ConsultationService] Error handling consultation completion: " + e.getMessage());
             e.printStackTrace();
