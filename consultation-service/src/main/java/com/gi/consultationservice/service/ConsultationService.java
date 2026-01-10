@@ -1,5 +1,6 @@
 package com.gi.consultationservice.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -31,6 +32,8 @@ import com.gi.consultationservice.entities.Consultation;
 import com.gi.consultationservice.entities.ConsultationCreatedEvent;
 import com.gi.consultationservice.enums.ConsultationType;
 import com.gi.consultationservice.mappers.ConsultationMapper;
+import com.gi.consultationservice.messaging.ConsultationCompletedEvent;
+import com.gi.consultationservice.messaging.ConsultationCompletedEventPublisher;
 import com.gi.consultationservice.messaging.OrdonnanceCountClient;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
@@ -54,6 +57,7 @@ public class ConsultationService {
     private final NotificationClient notificationClient;
     private final UserClient userClient;
     private final PatientClient patientClient;
+    private final ConsultationCompletedEventPublisher eventPublisher;
 
     public ConsultationService(ConsultationRepository consultationRepository,
                                ConsultationEventRepository eventRepository,
@@ -62,7 +66,8 @@ public class ConsultationService {
                                AppointmentClient appointmentClient,
                                NotificationClient notificationClient,
                                UserClient userClient,
-                               PatientClient patientClient) {
+                               PatientClient patientClient,
+                               ConsultationCompletedEventPublisher eventPublisher) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
@@ -71,6 +76,7 @@ public class ConsultationService {
         this.notificationClient = notificationClient;
         this.userClient = userClient;
         this.patientClient = patientClient;
+        this.eventPublisher = eventPublisher;
     }
 
     public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
@@ -346,6 +352,22 @@ public class ConsultationService {
                 );
                 System.out.println("[ConsultationService] ✓ Sent billing notification to secretary " + secretary.getId());
             }
+
+            // 5. Publish Kafka event for invoice initialization
+            System.out.println("[ConsultationService] Publishing consultation completed event for invoice initialization...");
+            ConsultationCompletedEvent event = new ConsultationCompletedEvent(
+                consultation.getId(),
+                consultation.getRendezVousId(),
+                consultation.getPatientId(),
+                consultation.getMedecinId(),
+                consultation.getCabinetId(),
+                consultation.getDiagnostic(),
+                consultation.getTraitement(),
+                Instant.now()
+            );
+            eventPublisher.publish(event);
+            System.out.println("[ConsultationService] ✓ Published consultation completed event");
+
             System.out.println("[ConsultationService] ===== CONSULTATION COMPLETION HANDLED SUCCESSFULLY =====");
         } catch (Exception e) {
             System.err.println("[ConsultationService] Error handling consultation completion: " + e.getMessage());

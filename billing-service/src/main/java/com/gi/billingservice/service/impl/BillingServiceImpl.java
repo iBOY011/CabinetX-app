@@ -10,6 +10,8 @@ import com.gi.billingservice.model.enums.InvoiceStatus;
 import com.gi.billingservice.model.enums.PaymentMethod;
 import com.gi.billingservice.repository.InvoiceRepository;
 import com.gi.billingservice.service.BillingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,29 +27,41 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BillingServiceImpl implements BillingService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BillingServiceImpl.class);
+
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
 
     @Override
     public InvoiceDTO generateInvoice(Long consultationId, BigDecimal amount) {
-        // Mock consultation details
+        // For backward compatibility, try to get consultation details
+        // In a real implementation, this would call a consultation service
+        // For now, we'll use mock data but log a warning
+        LOGGER.warn("Using generateInvoice with mock data for consultationId: {}. Consider using generateInvoiceFromConsultation instead.", consultationId);
+
         ConsultationDTO consultation = new ConsultationDTO();
-        consultation.setPatientId(1L); // 
+        consultation.setPatientId(1L); // Mock
         consultation.setCabinetId(1L); // Mock
         consultation.setDoctorId(1L); // Mock
 
+        return generateInvoiceFromConsultation(consultationId, consultation.getPatientId(),
+                consultation.getCabinetId(), consultation.getDoctorId(), amount);
+    }
+
+    @Override
+    public InvoiceDTO generateInvoiceFromConsultation(Long consultationId, Long patientId, Long cabinetId, Long doctorId, BigDecimal amount) {
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber(generateInvoiceNumber());
-        invoice.setPatientId(consultation.getPatientId());
+        invoice.setPatientId(patientId);
         invoice.setConsultationId(consultationId);
-        invoice.setCabinetId(consultation.getCabinetId());
-        invoice.setDoctorId(consultation.getDoctorId());
+        invoice.setCabinetId(cabinetId);
+        invoice.setDoctorId(doctorId);
         invoice.setInvoiceDate(LocalDateTime.now());
         invoice.setAmount(amount);
         invoice.setStatus(InvoiceStatus.PENDING_PAYMENT);
 
         Invoice saved = invoiceRepository.save(invoice);
-        String patientName = "Mock Patient"; // Mock
+        String patientName = "Patient " + patientId; // In real implementation, this would come from patient service
         return invoiceMapper.toDTO(saved, patientName);
     }
 

@@ -10,6 +10,8 @@ public interface BillingService {
 
     InvoiceDTO generateInvoice(Long consultationId, BigDecimal amount);
 
+    InvoiceDTO generateInvoiceFromConsultation(Long consultationId, Long patientId, Long cabinetId, Long doctorId, BigDecimal amount);
+
     InvoiceDTO recordPayment(Long invoiceId, PaymentMethod paymentMethod);
 
     InvoiceDTO cancelInvoice(Long invoiceId);
