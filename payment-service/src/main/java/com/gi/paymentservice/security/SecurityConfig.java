@@ -10,11 +10,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -33,35 +28,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .authorizeHttpRequests(ar->ar.requestMatchers("/h2-console/**").permitAll())
-                .authorizeHttpRequests(ar->ar.requestMatchers("/api/billing/webhook", "/payments/webhook").permitAll())
-                .authorizeHttpRequests(ar->ar.requestMatchers("/api/**").hasAuthority("MEDCIN"))
+                .authorizeHttpRequests(ar->ar.requestMatchers("/api/**").permitAll())
                 .authorizeHttpRequests(ar->ar.anyRequest().authenticated())
-                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
+                // OAuth2 disabled for local testing - uncomment when Keycloak is accessible
+                // .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
                 .build();
-    }
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // IMPORTANT : Utilisez setAllowedOriginPatterns au lieu de setAllowedOrigins
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-
-        // Ou pour plus de sécurité, spécifiez les origines exactes :
-        // configuration.setAllowedOrigins(Arrays.asList(
-        //     "http://localhost:3000",
-        //     "http://localhost:8081",
-        //     "http://localhost:4200"
-        // ));
-
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setAllowCredentials(true); // IMPORTANT : Ajoutez cette ligne
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
     }
 }
 
