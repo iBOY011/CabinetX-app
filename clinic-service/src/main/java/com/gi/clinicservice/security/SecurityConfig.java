@@ -40,7 +40,7 @@ public class SecurityConfig {
         if (isOAuth2Enabled()) {
             http
                     .authorizeHttpRequests(ar -> ar.requestMatchers("/api/clinic/**").permitAll()) // Allow service-to-service calls
-                    .authorizeHttpRequests(ar -> ar.requestMatchers("/api/**").hasAuthority("ADMIN"))
+                    .authorizeHttpRequests(ar -> ar.requestMatchers("/api/clinics/**").hasAnyAuthority("ADMIN", "MEDCIN", "SECRETAIRE")) // Allow users to view clinic info
                     .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
                     .oauth2ResourceServer(o2 -> o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));
         } else {

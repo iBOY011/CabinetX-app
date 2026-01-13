@@ -39,6 +39,7 @@ public class ClinicController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ClinicDTO> findById(@PathVariable Long id) {
+        System.out.println("[ClinicController] GET /api/clinics/" + id);
         return ResponseEntity.ok(service.findById(id));
     }
 
