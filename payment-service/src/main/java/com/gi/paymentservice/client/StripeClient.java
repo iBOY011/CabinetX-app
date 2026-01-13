@@ -15,10 +15,12 @@ import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.InvoiceCollection;
 import com.stripe.model.Subscription;
+import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.InvoiceListParams;
 import com.stripe.param.SubscriptionCancelParams;
+import com.stripe.param.checkout.SessionCreateParams;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +55,39 @@ public class StripeClient {
     }
 
     /**
-     * Simplified checkout placeholder: generate a mock session id without creating a Stripe Checkout session.
+     * Create a real Stripe Checkout Session.
+     * @param customerId Stripe customer ID
+     * @param priceId Stripe price ID
+     * @param cabinetId Cabinet ID for metadata
+     * @param successUrl URL to redirect on success
+     * @param cancelUrl URL to redirect on cancel
+     * @return Session object with sessionId and url
      */
+    public Session createCheckoutSession(String customerId, String priceId, Long cabinetId, String successUrl, String cancelUrl) throws StripeException {
+        SessionCreateParams.Builder builder = SessionCreateParams.builder()
+            .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+            .setCustomer(customerId)
+            .addLineItem(
+                SessionCreateParams.LineItem.builder()
+                    .setPrice(priceId)
+                    .setQuantity(1L)
+                    .build()
+            )
+            .setSuccessUrl(successUrl)
+            .setCancelUrl(cancelUrl);
+        
+        if (cabinetId != null) {
+            builder.putMetadata("cabinetId", String.valueOf(cabinetId));
+        }
+        
+        return Session.create(builder.build());
+    }
+
+    /**
+     * Simplified checkout placeholder: generate a mock session id without creating a Stripe Checkout session.
+     * @deprecated Use createCheckoutSession() instead
+     */
+    @Deprecated
     public String createCheckoutSessionId(String clientReference) {
         String suffix = StringUtils.hasText(clientReference) ? clientReference : String.valueOf(System.currentTimeMillis());
         return "cs_mock_" + suffix;

@@ -23,6 +23,7 @@ public class PrescriptionMapper {
         dto.setDoctorId(prescription.getDoctorId());
         dto.setClinicId(prescription.getClinicId());
         dto.setPrescriptionDate(prescription.getPrescriptionDate());
+        dto.setDigitalSignature(prescription.getDigitalSignature());
         dto.setLines(toLineDTOs(prescription.getLines()));
         return dto;
     }
@@ -38,6 +39,7 @@ public class PrescriptionMapper {
         prescription.setDoctorId(dto.getDoctorId());
         prescription.setClinicId(dto.getClinicId());
         prescription.setPrescriptionDate(dto.getPrescriptionDate());
+        prescription.setDigitalSignature(dto.getDigitalSignature());
         prescription.setLines(toLineEntities(dto.getLines(), prescription));
         return prescription;
     }

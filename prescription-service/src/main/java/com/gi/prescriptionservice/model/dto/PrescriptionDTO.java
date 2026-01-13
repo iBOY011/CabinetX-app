@@ -1,12 +1,14 @@
 package com.gi.prescriptionservice.model.dto;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -33,6 +35,9 @@ public class PrescriptionDTO {
     
     @NotNull(message = "La date de prescription est obligatoire")
     private java.time.LocalDate prescriptionDate;
+
+    // Signature numérique (PNG base64) optionnelle
+    private String digitalSignature;
     
     @NotEmpty(message = "La prescription doit contenir au moins une ligne")
     @Valid

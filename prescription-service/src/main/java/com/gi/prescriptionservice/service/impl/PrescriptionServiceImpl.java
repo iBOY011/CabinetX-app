@@ -35,6 +35,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         prescription.setDoctorId(dto.getDoctorId());
         prescription.setClinicId(dto.getClinicId());
         prescription.setPrescriptionDate(dto.getPrescriptionDate());
+        prescription.setDigitalSignature(dto.getDigitalSignature());
         final Prescription savedPrescription = prescriptionRepository.save(prescription);
 
         if (dto.getLines() != null && !dto.getLines().isEmpty()) {
