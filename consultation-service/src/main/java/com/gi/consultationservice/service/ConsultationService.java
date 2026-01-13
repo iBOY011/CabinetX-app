@@ -60,14 +60,14 @@ public class ConsultationService {
     private final ConsultationCompletedEventPublisher eventPublisher;
 
     public ConsultationService(ConsultationRepository consultationRepository,
-                               ConsultationEventRepository eventRepository,
-                               ConsultationMapper consultationMapper,
-                               OrdonnanceCountClient ordonnanceCountClient,
-                               AppointmentClient appointmentClient,
-                               NotificationClient notificationClient,
-                               UserClient userClient,
-                               PatientClient patientClient,
-                               ConsultationCompletedEventPublisher eventPublisher) {
+            ConsultationEventRepository eventRepository,
+            ConsultationMapper consultationMapper,
+            OrdonnanceCountClient ordonnanceCountClient,
+            AppointmentClient appointmentClient,
+            NotificationClient notificationClient,
+            UserClient userClient,
+            PatientClient patientClient,
+            ConsultationCompletedEventPublisher eventPublisher) {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
@@ -79,7 +79,7 @@ public class ConsultationService {
         this.eventPublisher = eventPublisher;
     }
 
-    public ConsultationDTO  creerConsultation(ConsultationDTO dto) {
+    public ConsultationDTO creerConsultation(ConsultationDTO dto) {
         Consultation consultation = consultationMapper.toEntity(dto);
         System.out.println(dto);
         System.out.println(consultation);
@@ -102,16 +102,17 @@ public class ConsultationService {
         System.out.println("[ConsultationService] Updated.archived: " + existing.getArchived());
         Consultation updated = consultationRepository.save(existing);
         System.out.println("[ConsultationService] Saved consultation: " + updated);
-        
+
         // If consultation is being archived (terminated), trigger notifications
-        System.out.println("[ConsultationService] Check completion: wasNotArchived=" + wasNotArchived + ", dto.archived=" + dto.getArchived());
+        System.out.println("[ConsultationService] Check completion: wasNotArchived=" + wasNotArchived
+                + ", dto.archived=" + dto.getArchived());
         if (wasNotArchived && dto.getArchived() != null && dto.getArchived()) {
             System.out.println("[ConsultationService] Triggering handleConsultationCompletion...");
             handleConsultationCompletion(updated);
         } else {
             System.out.println("[ConsultationService] Skipping handleConsultationCompletion");
         }
-        
+
         return consultationMapper.toDTO(updated);
     }
 
@@ -135,8 +136,7 @@ public class ConsultationService {
     @Transactional(readOnly = true)
     public List<ConsultationSummaryDTO> listerParPatient(Long patientId) {
         return consultationMapper.toSummaryList(
-                consultationRepository.findByPatientIdOrderByDateConsultationDesc(patientId)
-        );
+                consultationRepository.findByPatientIdOrderByDateConsultationDesc(patientId));
     }
 
     @Transactional(readOnly = true)
@@ -162,23 +162,24 @@ public class ConsultationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConsultationSummaryDTO> listerParMedecinEtPeriode(Long medecinId, OffsetDateTime debut, OffsetDateTime fin) {
+    public List<ConsultationSummaryDTO> listerParMedecinEtPeriode(Long medecinId, OffsetDateTime debut,
+            OffsetDateTime fin) {
         List<Consultation> consultations = consultationRepository
-            .findByMedecinIdAndDateConsultationBetweenOrderByDateConsultationAsc(
-                medecinId,
-                debut,
-                fin);
+                .findByMedecinIdAndDateConsultationBetweenOrderByDateConsultationAsc(
+                        medecinId,
+                        debut,
+                        fin);
         return consultationMapper.toSummaryList(consultations);
     }
 
-        @Transactional(readOnly = true)
-        public MedecinWeeklyStatsDTO statsMedecinWeekly(Long medecinId,
-                                Long cabinetId,
-                                LocalDate startDate,
-                                LocalDate endDate) {
+    @Transactional(readOnly = true)
+    public MedecinWeeklyStatsDTO statsMedecinWeekly(Long medecinId,
+            Long cabinetId,
+            LocalDate startDate,
+            LocalDate endDate) {
         LocalDate start = startDate != null
-            ? startDate
-            : LocalDate.now(DEFAULT_ZONE_OFFSET).with(java.time.DayOfWeek.MONDAY);
+                ? startDate
+                : LocalDate.now(DEFAULT_ZONE_OFFSET).with(java.time.DayOfWeek.MONDAY);
         LocalDate end = endDate != null ? endDate : start.plusDays(6);
         if (end.isBefore(start)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endDate doit être après startDate");
@@ -187,49 +188,53 @@ public class ConsultationService {
         OffsetDateTime debut = start.atStartOfDay().atOffset(DEFAULT_ZONE_OFFSET);
         OffsetDateTime fin = end.plusDays(1).atStartOfDay().minusNanos(1).atOffset(DEFAULT_ZONE_OFFSET);
 
-        Specification<Consultation> spec = Specification.where(specMedecin(medecinId))
-            .and(cabinetId != null ? specCabinet(cabinetId) : null)
-            .and(specDateBetween(debut, fin));
+        Specification<Consultation> spec = Specification.where(specMedecin(medecinId));
+        if (cabinetId != null) {
+            spec = spec.and(specCabinet(cabinetId));
+        }
+        spec = spec.and(specDateBetween(debut, fin));
 
-        List<Consultation> consultations = consultationRepository.findAll(spec, Sort.by(Sort.Order.asc("dateConsultation")));
+        List<Consultation> consultations = consultationRepository.findAll(spec,
+                Sort.by(Sort.Order.asc("dateConsultation")));
 
         Map<LocalDate, Long> perDay = consultations.stream()
-            .collect(Collectors.groupingBy(c -> c.getDateConsultation().toLocalDate(), Collectors.counting()));
+                .collect(Collectors.groupingBy(c -> c.getDateConsultation().toLocalDate(), Collectors.counting()));
 
         List<DailyStatDTO> daily = new ArrayList<>();
         for (LocalDate cursor = start; !cursor.isAfter(end); cursor = cursor.plusDays(1)) {
             long dayConsultations = perDay.getOrDefault(cursor, 0L);
             daily.add(DailyStatDTO.builder()
-                .date(cursor)
-                .consultations(dayConsultations)
-                .ordonnances(0L) // Ordonnances non gérées ici; intégrer un service dédié si disponible
-                .presenceRate(dayConsultations > 0 ? 100.0 : 0.0)
-                .build());
+                    .date(cursor)
+                    .consultations(dayConsultations)
+                    .ordonnances(0L) // Ordonnances non gérées ici; intégrer un service dédié si disponible
+                    .presenceRate(dayConsultations > 0 ? 100.0 : 0.0)
+                    .build());
         }
 
         long consultationsCount = consultations.size();
-        OptionalLong ordonnancesCountOptional = ordonnanceCountClient.getCountOrRequest(medecinId, cabinetId, debut, fin);
+        OptionalLong ordonnancesCountOptional = ordonnanceCountClient.getCountOrRequest(medecinId, cabinetId, debut,
+                fin);
         long ordonnancesCount = ordonnancesCountOptional.orElse(-1L);
         double presenceRate = consultationsCount > 0 ? 100.0 : 0.0;
 
         return MedecinWeeklyStatsDTO.builder()
-            .medecinId(medecinId)
-            .cabinetId(cabinetId)
-            .start(debut)
-            .end(fin)
-            .consultationsCount(consultationsCount)
-            .ordonnancesCount(ordonnancesCount)
-            .presenceRate(presenceRate)
-            .daily(daily)
-            .build();
-        }
+                .medecinId(medecinId)
+                .cabinetId(cabinetId)
+                .start(debut)
+                .end(fin)
+                .consultationsCount(consultationsCount)
+                .ordonnancesCount(ordonnancesCount)
+                .presenceRate(presenceRate)
+                .daily(daily)
+                .build();
+    }
 
     @Transactional(readOnly = true)
     public Page<ConsultationSummaryDTO> listerParMedecinPaged(Long medecinId,
-                                                             Long patientId,
-                                                             Boolean archived,
-                                                             ConsultationType type,
-                                                             Pageable pageable) {
+            Long patientId,
+            Boolean archived,
+            ConsultationType type,
+            Pageable pageable) {
         Specification<Consultation> spec = Specification.where(specMedecin(medecinId))
                 .and(patientId != null ? specPatient(patientId) : null)
                 .and(archived != null ? specArchived(archived) : null)
@@ -319,9 +324,11 @@ public class ConsultationService {
         try {
             // 1. Mark appointment as completed
             if (consultation.getRendezVousId() != null) {
-                System.out.println("[ConsultationService] Marking appointment " + consultation.getRendezVousId() + " as completed...");
+                System.out.println("[ConsultationService] Marking appointment " + consultation.getRendezVousId()
+                        + " as completed...");
                 appointmentClient.markAppointmentAsCompleted(consultation.getRendezVousId());
-                System.out.println("[ConsultationService] ✓ Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
+                System.out.println(
+                        "[ConsultationService] ✓ Marked appointment " + consultation.getRendezVousId() + " as TERMINE");
             } else {
                 System.out.println("[ConsultationService] ⚠ No rendezVousId, skipping appointment update");
             }
@@ -333,14 +340,16 @@ public class ConsultationService {
             System.out.println("[ConsultationService] ✓ Patient: " + patientName);
 
             // 3. Get all secretaries in the same cabinet
-            System.out.println("[ConsultationService] Fetching secretaries for cabinet ID: " + consultation.getCabinetId());
+            System.out.println(
+                    "[ConsultationService] Fetching secretaries for cabinet ID: " + consultation.getCabinetId());
             List<UserClient.UserDTO> secretaries = userClient.getUsersByCabinetAndRole(
                     consultation.getCabinetId(), "secretaire");
             System.out.println("[ConsultationService] ✓ Found " + secretaries.size() + " secretary/secretaries");
 
             // 4. Send notification to each secretary
             for (UserClient.UserDTO secretary : secretaries) {
-                System.out.println("[ConsultationService] Sending billing notification to secretary " + secretary.getId() + " (" + secretary.getEmail() + ")");
+                System.out.println("[ConsultationService] Sending billing notification to secretary "
+                        + secretary.getId() + " (" + secretary.getEmail() + ")");
                 notificationClient.sendBillingReadyNotification(
                         secretary.getId(),
                         consultation.getId(),
@@ -348,23 +357,23 @@ public class ConsultationService {
                         consultation.getPatientId(),
                         patientName,
                         consultation.getDiagnostic(),
-                        consultation.getTraitement()
-                );
-                System.out.println("[ConsultationService] ✓ Sent billing notification to secretary " + secretary.getId());
+                        consultation.getTraitement());
+                System.out
+                        .println("[ConsultationService] ✓ Sent billing notification to secretary " + secretary.getId());
             }
 
             // 5. Publish Kafka event for invoice initialization
-            System.out.println("[ConsultationService] Publishing consultation completed event for invoice initialization...");
+            System.out.println(
+                    "[ConsultationService] Publishing consultation completed event for invoice initialization...");
             ConsultationCompletedEvent event = new ConsultationCompletedEvent(
-                consultation.getId(),
-                consultation.getRendezVousId(),
-                consultation.getPatientId(),
-                consultation.getMedecinId(),
-                consultation.getCabinetId(),
-                consultation.getDiagnostic(),
-                consultation.getTraitement(),
-                Instant.now()
-            );
+                    consultation.getId(),
+                    consultation.getRendezVousId(),
+                    consultation.getPatientId(),
+                    consultation.getMedecinId(),
+                    consultation.getCabinetId(),
+                    consultation.getDiagnostic(),
+                    consultation.getTraitement(),
+                    Instant.now());
             eventPublisher.publish(event);
             System.out.println("[ConsultationService] ✓ Published consultation completed event");
 
@@ -372,7 +381,8 @@ public class ConsultationService {
         } catch (Exception e) {
             System.err.println("[ConsultationService] Error handling consultation completion: " + e.getMessage());
             e.printStackTrace();
-            // Don't throw - we don't want to rollback the consultation update if notifications fail
+            // Don't throw - we don't want to rollback the consultation update if
+            // notifications fail
         }
     }
 }
