@@ -37,3 +37,14 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+.idea
+application-*.yml
+application-*.properties
+
+backend-info-request.txt
+
+### Spring Boot env ###
+env/*
+
+logs
