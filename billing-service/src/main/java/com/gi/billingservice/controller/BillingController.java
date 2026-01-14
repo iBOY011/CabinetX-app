@@ -49,6 +49,18 @@ public class BillingController {
         return ResponseEntity.ok(invoice);
     }
 
+    @GetMapping("/consultations/{consultationId}/invoice")
+    public ResponseEntity<InvoiceDTO> getInvoiceByConsultation(@PathVariable Long consultationId) {
+        InvoiceDTO invoice = billingService.findByConsultationId(consultationId);
+        return ResponseEntity.ok(invoice);
+    }
+
+    @PutMapping("/invoices/{id}/amount")
+    public ResponseEntity<InvoiceDTO> updateAmount(@PathVariable Long id, @RequestParam BigDecimal amount) {
+        InvoiceDTO invoice = billingService.updateAmount(id, amount);
+        return ResponseEntity.ok(invoice);
+    }
+
     @GetMapping("/patients/{patientId}/invoices")
     public ResponseEntity<List<InvoiceDTO>> getInvoicesByPatient(@PathVariable Long patientId) {
         List<InvoiceDTO> invoices = billingService.listInvoicesByPatient(patientId);

@@ -17,12 +17,26 @@ public class NotificationWebSocketController {
     }
 
     /**
+     * Send a notification to a specific user via WebSocket
+     * Topic: /topic/doctor/{userId}/notifications
+     * Note: The topic name uses "doctor" for legacy reasons, but it works for all user types
+     * (doctors, secretaries, etc.) since the frontend subscribes using the user ID
+     */
+    public void sendNotificationToUser(Long userId, NotificationResponse notification) {
+        String destination = "/topic/doctor/" + userId + "/notifications";
+        System.out.println("[NotificationWebSocketController] Sending notification to user " + userId + " at topic: " + destination);
+        messagingTemplate.convertAndSend(destination, notification);
+        System.out.println("[NotificationWebSocketController] ✓ Notification sent to WebSocket topic");
+    }
+
+    /**
      * Send a notification to a specific doctor via WebSocket
      * Topic: /topic/doctor/{doctorId}/notifications
+     * @deprecated Use sendNotificationToUser instead
      */
+    @Deprecated
     public void sendNotificationToDoctor(Long doctorId, NotificationResponse notification) {
-        String destination = "/topic/doctor/" + doctorId + "/notifications";
-        messagingTemplate.convertAndSend(destination, notification);
+        sendNotificationToUser(doctorId, notification);
     }
 
     /**

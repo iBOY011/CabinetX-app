@@ -1,5 +1,6 @@
 package com.gi.prescriptionservice.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
@@ -24,4 +25,6 @@ public interface PrescriptionService {
     byte[] generateMedicationPdf(Long prescriptionId);
 
     byte[] generateExamPdf(Long prescriptionId);
+
+    long countPrescriptions(Long doctorId, Long clinicId, LocalDate startDate, LocalDate endDate);
 }

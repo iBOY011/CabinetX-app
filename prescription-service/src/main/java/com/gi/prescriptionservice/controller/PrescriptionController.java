@@ -1,7 +1,9 @@
 package com.gi.prescriptionservice.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gi.prescriptionservice.model.dto.PrescriptionDTO;
@@ -88,5 +91,15 @@ public class PrescriptionController {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", "exam-prescription.pdf");
         return ResponseEntity.ok().headers(headers).body(pdf);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getPrescriptionCount(
+            @RequestParam Long doctorId,
+            @RequestParam(required = false) Long clinicId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        long count = prescriptionService.countPrescriptions(doctorId, clinicId, startDate, endDate);
+        return ResponseEntity.ok(count);
     }
 }

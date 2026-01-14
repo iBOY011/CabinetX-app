@@ -52,7 +52,22 @@ public class NotificationController {
             @RequestParam String patientName,
             @RequestParam String diagnostic,
             @RequestParam String traitement) {
+        System.out.println("===== NOTIFICATION CONTROLLER: /billing-ready endpoint called =====");
+        System.out.println("→ Received request for secretary ID: " + secretaryId);
+        System.out.println("→ Consultation: " + consultationId + ", Appointment: " + appointmentId);
+        System.out.println("→ Patient: " + patientName + " (ID: " + patientId + ")");
         return ResponseEntity.ok(service.sendBillingReadyNotification(
                 secretaryId, consultationId, appointmentId, patientId, patientName, diagnostic, traitement));
+    }
+
+    @PostMapping("/request-next-patient")
+    public ResponseEntity<NotificationResponse> requestNextPatient(
+            @RequestParam Long doctorId,
+            @RequestParam String doctorName,
+            @RequestParam Long clinicId) {
+        System.out.println("===== NOTIFICATION CONTROLLER: /request-next-patient endpoint called =====");
+        System.out.println("→ Doctor: " + doctorName + " (ID: " + doctorId + ")");
+        System.out.println("→ Clinic ID: " + clinicId);
+        return ResponseEntity.ok(service.sendNextPatientRequest(doctorId, doctorName, clinicId));
     }
 }
