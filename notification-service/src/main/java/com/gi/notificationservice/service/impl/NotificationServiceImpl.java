@@ -79,6 +79,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationResponse sendBillingReadyNotification(Long secretaryId, Long consultationId, Long appointmentId,
             Long patientId, String patientName, String diagnostic, String traitement) {
+        System.out.println("===== NOTIFICATION SERVICE: BILLING READY NOTIFICATION =====");
+        System.out.println("→ Secretary ID: " + secretaryId);
+        System.out.println("→ Consultation ID: " + consultationId);
+        System.out.println("→ Appointment ID: " + appointmentId);
+        System.out.println("→ Patient: " + patientName + " (ID: " + patientId + ")");
+        System.out.println("→ Diagnostic: " + diagnostic);
+        
         Notification notification = new Notification();
         notification.setRecipientId(secretaryId);
         notification.setType(NotificationType.BILLING_READY);
@@ -91,12 +98,15 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setPatientId(patientId);
         notification.setConsultationId(consultationId);
         Notification saved = repository.save(notification);
+        System.out.println("✓ Notification saved to database with ID: " + saved.getId());
 
         // Convert to response DTO
         NotificationResponse response = NotificationMapper.toResponse(saved);
 
         // Send via WebSocket for real-time delivery to secretary
+        System.out.println("→ Sending WebSocket notification to secretary ID: " + secretaryId);
         webSocketController.sendNotificationToDoctor(secretaryId, response);
+        System.out.println("===== BILLING READY NOTIFICATION COMPLETED =====");
 
         return response;
     }
