@@ -10,6 +10,7 @@ public class ConsultationDTO {
     private Long patientId;
     private Long medecinId;
     private Long cabinetId;
+    private String type;
     private String diagnostic;
     private String traitement;
     private OffsetDateTime dateConsultation;

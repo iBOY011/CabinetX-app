@@ -1,5 +1,6 @@
 package com.gi.notificationservice.service.impl;
 
+import com.gi.notificationservice.client.UserClient;
 import com.gi.notificationservice.exception.ResourceNotFoundException;
 import com.gi.notificationservice.mapper.NotificationMapper;
 import com.gi.notificationservice.model.entity.Notification;
@@ -18,11 +19,14 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository repository;
     private final NotificationWebSocketController webSocketController;
+    private final UserClient userClient;
 
     public NotificationServiceImpl(NotificationRepository repository,
-            NotificationWebSocketController webSocketController) {
+            NotificationWebSocketController webSocketController,
+            UserClient userClient) {
         this.repository = repository;
         this.webSocketController = webSocketController;
+        this.userClient = userClient;
     }
 
     @Override
@@ -108,6 +112,49 @@ public class NotificationServiceImpl implements NotificationService {
         webSocketController.sendNotificationToDoctor(secretaryId, response);
         System.out.println("===== BILLING READY NOTIFICATION COMPLETED =====");
 
+        return response;
+    }
+
+    @Override
+    public NotificationResponse sendNextPatientRequest(Long doctorId, String doctorName, Long clinicId) {
+        System.out.println("===== NOTIFICATION SERVICE: NEXT PATIENT REQUEST =====");
+        System.out.println("→ Doctor: " + doctorName + " (ID: " + doctorId + ")");
+        System.out.println("→ Clinic ID: " + clinicId);
+        
+        // Trouver les secrétaires du cabinet
+        List<UserClient.UserDTO> secretaries = userClient.getUsersByCabinetAndRole(clinicId, "SECRETAIRE");
+        
+        if (secretaries == null || secretaries.isEmpty()) {
+            System.out.println("⚠ No secretary found for clinic ID: " + clinicId);
+            throw new ResourceNotFoundException("Aucune secrétaire trouvée pour ce cabinet");
+        }
+        
+        System.out.println("✓ Found " + secretaries.size() + " secretary(ies)");
+        
+        NotificationResponse response = null;
+        
+        // Envoyer une notification à chaque secrétaire
+        for (UserClient.UserDTO secretary : secretaries) {
+            System.out.println("→ Sending to secretary: " + secretary.getFirstName() + " " + secretary.getLastName() + " (ID: " + secretary.getId() + ")");
+            
+            Notification notification = new Notification();
+            notification.setRecipientId(secretary.getId());
+            notification.setType(NotificationType.PATIENT_FOLLOWING);
+            notification.setTitle("Demande de patient suivant");
+            notification.setContent(String.format("%s demande le patient suivant", doctorName));
+            notification.setStatus(NotificationStatus.PENDING);
+            notification.setCreationDate(LocalDateTime.now());
+            Notification saved = repository.save(notification);
+            System.out.println("✓ Notification saved to database with ID: " + saved.getId());
+
+            // Convert to response DTO
+            response = NotificationMapper.toResponse(saved);
+
+            // Send via WebSocket
+            webSocketController.sendNotificationToDoctor(secretary.getId(), response);
+        }
+        
+        System.out.println("===== NEXT PATIENT REQUEST COMPLETED =====");
         return response;
     }
 

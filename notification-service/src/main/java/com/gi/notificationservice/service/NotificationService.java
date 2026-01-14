@@ -14,6 +14,8 @@ public interface NotificationService {
     NotificationResponse sendBillingReadyNotification(Long secretaryId, Long consultationId, Long appointmentId, 
             Long patientId, String patientName, String diagnostic, String traitement);
 
+    NotificationResponse sendNextPatientRequest(Long doctorId, String doctorName, Long clinicId);
+
     NotificationResponse markAsRead(Long notificationId);
 
     List<NotificationResponse> listNotifications(Long recipientId);

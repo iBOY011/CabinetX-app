@@ -34,13 +34,13 @@ import com.gi.consultationservice.enums.ConsultationType;
 import com.gi.consultationservice.mappers.ConsultationMapper;
 import com.gi.consultationservice.messaging.ConsultationCompletedEvent;
 import com.gi.consultationservice.messaging.ConsultationCompletedEventPublisher;
-import com.gi.consultationservice.messaging.OrdonnanceCountClient;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
 import com.gi.consultationservice.client.AppointmentClient;
 import com.gi.consultationservice.client.NotificationClient;
 import com.gi.consultationservice.client.UserClient;
 import com.gi.consultationservice.client.PatientClient;
+import com.gi.consultationservice.client.PrescriptionClient;
 
 @Service
 @Transactional
@@ -52,7 +52,7 @@ public class ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final ConsultationEventRepository eventRepository;
     private final ConsultationMapper consultationMapper;
-    private final OrdonnanceCountClient ordonnanceCountClient;
+    private final PrescriptionClient prescriptionClient;
     private final AppointmentClient appointmentClient;
     private final NotificationClient notificationClient;
     private final UserClient userClient;
@@ -62,7 +62,7 @@ public class ConsultationService {
     public ConsultationService(ConsultationRepository consultationRepository,
             ConsultationEventRepository eventRepository,
             ConsultationMapper consultationMapper,
-            OrdonnanceCountClient ordonnanceCountClient,
+            PrescriptionClient prescriptionClient,
             AppointmentClient appointmentClient,
             NotificationClient notificationClient,
             UserClient userClient,
@@ -71,7 +71,7 @@ public class ConsultationService {
         this.consultationRepository = consultationRepository;
         this.eventRepository = eventRepository;
         this.consultationMapper = consultationMapper;
-        this.ordonnanceCountClient = ordonnanceCountClient;
+        this.prescriptionClient = prescriptionClient;
         this.appointmentClient = appointmentClient;
         this.notificationClient = notificationClient;
         this.userClient = userClient;
@@ -212,9 +212,19 @@ public class ConsultationService {
         }
 
         long consultationsCount = consultations.size();
-        OptionalLong ordonnancesCountOptional = ordonnanceCountClient.getCountOrRequest(medecinId, cabinetId, debut,
-                fin);
-        long ordonnancesCount = ordonnancesCountOptional.orElse(-1L);
+        long ordonnancesCount = -1L;
+        try {
+            Long count = prescriptionClient.getPrescriptionCount(
+                    medecinId,
+                    cabinetId,
+                    start,
+                    end);
+            if (count != null) {
+                ordonnancesCount = count;
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to fetch prescription count from prescription-service: {}", e.getMessage());
+        }
         double presenceRate = consultationsCount > 0 ? 100.0 : 0.0;
 
         return MedecinWeeklyStatsDTO.builder()

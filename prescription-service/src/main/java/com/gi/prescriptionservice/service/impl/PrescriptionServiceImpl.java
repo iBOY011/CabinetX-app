@@ -1,5 +1,6 @@
 package com.gi.prescriptionservice.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,5 +108,17 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public byte[] generateExamPdf(Long prescriptionId) {
         // TODO: Implement PDF generation for exams
         return new byte[0];
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countPrescriptions(Long doctorId, Long clinicId, LocalDate startDate, LocalDate endDate) {
+        if (clinicId != null) {
+            return prescriptionRepository.countByDoctorIdAndClinicIdAndPrescriptionDateBetween(
+                    doctorId, clinicId, startDate, endDate);
+        } else {
+            return prescriptionRepository.countByDoctorIdAndPrescriptionDateBetween(
+                    doctorId, startDate, endDate);
+        }
     }
 }

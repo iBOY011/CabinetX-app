@@ -59,4 +59,15 @@ public class NotificationController {
         return ResponseEntity.ok(service.sendBillingReadyNotification(
                 secretaryId, consultationId, appointmentId, patientId, patientName, diagnostic, traitement));
     }
+
+    @PostMapping("/request-next-patient")
+    public ResponseEntity<NotificationResponse> requestNextPatient(
+            @RequestParam Long doctorId,
+            @RequestParam String doctorName,
+            @RequestParam Long clinicId) {
+        System.out.println("===== NOTIFICATION CONTROLLER: /request-next-patient endpoint called =====");
+        System.out.println("→ Doctor: " + doctorName + " (ID: " + doctorId + ")");
+        System.out.println("→ Clinic ID: " + clinicId);
+        return ResponseEntity.ok(service.sendNextPatientRequest(doctorId, doctorName, clinicId));
+    }
 }
