@@ -18,6 +18,10 @@ public interface BillingService {
 
     InvoiceDTO findById(Long id);
 
+    InvoiceDTO findByConsultationId(Long consultationId);
+
+    InvoiceDTO updateAmount(Long invoiceId, BigDecimal amount);
+
     List<InvoiceDTO> listInvoicesByPatient(Long patientId);
 
     byte[] generatePdf(Long invoiceId);

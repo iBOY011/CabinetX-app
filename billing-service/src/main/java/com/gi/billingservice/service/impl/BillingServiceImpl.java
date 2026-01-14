@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gi.billingservice.client.ConsultationClient;
+import com.gi.billingservice.client.PatientClient;
+import com.gi.billingservice.client.UserClient;
+import com.gi.billingservice.client.ClinicClient;
 import com.gi.billingservice.exception.BusinessException;
 import com.gi.billingservice.exception.ResourceNotFoundException;
 import com.gi.billingservice.mapper.InvoiceMapper;
@@ -48,6 +51,9 @@ public class BillingServiceImpl implements BillingService {
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
     private final ConsultationClient consultationClient;
+    private final PatientClient patientClient;
+    private final UserClient userClient;
+    private final ClinicClient clinicClient;
 
     @Override
     public InvoiceDTO generateInvoice(Long consultationId, BigDecimal amount) {
@@ -74,7 +80,7 @@ public class BillingServiceImpl implements BillingService {
         invoice.setStatus(InvoiceStatus.PENDING_PAYMENT);
 
         Invoice saved = invoiceRepository.save(invoice);
-                String patientName = "Mock Patient"; // Mock name to match current test expectations
+        String patientName = patientClient.getPatientName(patientId);
         return invoiceMapper.toDTO(saved, patientName);
     }
 
@@ -92,7 +98,7 @@ public class BillingServiceImpl implements BillingService {
         invoice.setStatus(InvoiceStatus.PAID);
 
         Invoice saved = invoiceRepository.save(invoice);
-        String patientName = "Mock Patient"; // Mock
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
         return invoiceMapper.toDTO(saved, patientName);
     }
 
@@ -103,7 +109,7 @@ public class BillingServiceImpl implements BillingService {
 
         invoice.setStatus(InvoiceStatus.CANCELLED);
         Invoice saved = invoiceRepository.save(invoice);
-        String patientName = "Mock Patient"; // Mock
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
         return invoiceMapper.toDTO(saved, patientName);
     }
 
@@ -111,18 +117,35 @@ public class BillingServiceImpl implements BillingService {
     public InvoiceDTO findById(Long id) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
-        String patientName = "Mock Patient"; // Mock
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
         return invoiceMapper.toDTO(invoice, patientName);
+    }
+
+    @Override
+    public InvoiceDTO findByConsultationId(Long consultationId) {
+        Invoice invoice = invoiceRepository.findByConsultationId(consultationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found for consultation: " + consultationId));
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
+        return invoiceMapper.toDTO(invoice, patientName);
+    }
+
+    @Override
+    public InvoiceDTO updateAmount(Long invoiceId, BigDecimal amount) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
+        
+        invoice.setAmount(amount);
+        Invoice saved = invoiceRepository.save(invoice);
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
+        return invoiceMapper.toDTO(saved, patientName);
     }
 
     @Override
     public List<InvoiceDTO> listInvoicesByPatient(Long patientId) {
         List<Invoice> invoices = invoiceRepository.findByPatientId(patientId);
+        String patientName = patientClient.getPatientName(patientId);
         return invoices.stream()
-                .map(invoice -> {
-                    String patientName = "Mock Patient"; // Mock
-                    return invoiceMapper.toDTO(invoice, patientName);
-                })
+                .map(invoice -> invoiceMapper.toDTO(invoice, patientName))
                 .collect(Collectors.toList());
     }
 
@@ -131,18 +154,86 @@ public class BillingServiceImpl implements BillingService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
-        // Mock data for patient and consultation
-        String patientName = "Jean Dupont";
-        String patientEmail = "jean.dupont@email.com";
-        String patientPhone = "+33 6 12 34 56 78";
-        String patientAddress = "123 Rue de la Santé, 75014 Paris, France";
-        String doctorName = "Dr. Marie Martin";
-        String doctorSpecialty = "Médecin Généraliste";
-        String cabinetName = "Cabinet Médical CabinetX";
-        String cabinetAddress = "45 Avenue des Soins, 75008 Paris, France";
-        String cabinetPhone = "+33 1 23 45 67 89";
+        // Récupérer les vraies données du patient
+        String patientName = patientClient.getPatientName(invoice.getPatientId());
+        
+        // Récupérer les données de consultation
+        ConsultationDTO consultation = null;
         String consultationType = "Consultation Générale";
-        String consultationNotes = "Examen de routine - Patient en bonne santé";
+        String diagnostic = "Non spécifié";
+        String traitement = "Non spécifié";
+        String observations = "";
+        Long medecinId = null;
+        Long cabinetId = null;
+        
+        try {
+            consultation = consultationClient.getConsultation(invoice.getConsultationId());
+            if (consultation != null) {
+                consultationType = consultation.getType() != null ? consultation.getType() : "Consultation Générale";
+                diagnostic = consultation.getDiagnostic() != null ? consultation.getDiagnostic() : "Non spécifié";
+                traitement = consultation.getTraitement() != null ? consultation.getTraitement() : "Non spécifié";
+                medecinId = consultation.getMedecinId();
+                cabinetId = consultation.getCabinetId();
+                
+                // Construire les observations/notes de consultation
+                StringBuilder obsBuilder = new StringBuilder();
+                if (diagnostic != null && !diagnostic.isEmpty() && !"Non spécifié".equals(diagnostic)) {
+                    obsBuilder.append("Diagnostic: ").append(diagnostic);
+                }
+                if (traitement != null && !traitement.isEmpty() && !"Non spécifié".equals(traitement)) {
+                    if (obsBuilder.length() > 0) obsBuilder.append("\n");
+                    obsBuilder.append("Traitement: ").append(traitement);
+                }
+                observations = obsBuilder.toString();
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Unable to fetch consultation details: {}", e.getMessage());
+        }
+        
+        // Récupérer les informations du médecin
+        String doctorName = "Dr. CabinetX";
+        String doctorSpecialty = "Médecin Généraliste";
+        if (medecinId != null) {
+            LOGGER.info("Fetching doctor details for medecinId: {}", medecinId);
+            try {
+                UserClient.UserDTO doctor = userClient.getUser(medecinId);
+                if (doctor != null) {
+                    String fullName = doctor.getFullName();
+                    if (fullName != null && !fullName.trim().isEmpty()) {
+                        doctorName = "Dr. " + fullName;
+                    }
+                    // La spécialité n'est pas dans le user-service, on garde la valeur par défaut
+                    LOGGER.info("Doctor details fetched: name={}, role={}", doctorName, doctor.getRole());
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Unable to fetch doctor details: {}", e.getMessage());
+            }
+        }
+        
+        // Récupérer les informations du cabinet
+        String cabinetName = "Cabinet Médical CabinetX";
+        String cabinetAddress = "Casablanca, Maroc";
+        String cabinetPhone = "+212 5 22 XX XX XX";
+        if (cabinetId != null) {
+            LOGGER.info("Fetching cabinet details for cabinetId: {}", cabinetId);
+            try {
+                ClinicClient.ClinicDTO clinic = clinicClient.getClinic(cabinetId);
+                if (clinic != null) {
+                    if (clinic.getName() != null && !clinic.getName().isEmpty()) {
+                        cabinetName = clinic.getName();
+                    }
+                    if (clinic.getAddress() != null && !clinic.getAddress().isEmpty()) {
+                        cabinetAddress = clinic.getAddress();
+                    }
+                    if (clinic.getPhone() != null && !clinic.getPhone().isEmpty()) {
+                        cabinetPhone = clinic.getPhone();
+                    }
+                    LOGGER.info("Cabinet details fetched: name={}, address={}, phone={}", cabinetName, cabinetAddress, cabinetPhone);
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Unable to fetch clinic details: {}", e.getMessage());
+            }
+        }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(baos);
@@ -190,9 +281,7 @@ public class BillingServiceImpl implements BillingService {
             Cell patientCell = new Cell()
                     .add(new Paragraph("INFORMATIONS PATIENT").setBold().setFontSize(12))
                     .add(new Paragraph("Nom: " + patientName).setFontSize(10))
-                    .add(new Paragraph("Email: " + patientEmail).setFontSize(10))
-                    .add(new Paragraph("Tél: " + patientPhone).setFontSize(10))
-                    .add(new Paragraph("Adresse: " + patientAddress).setFontSize(10))
+                    .add(new Paragraph("ID Patient: #" + invoice.getPatientId()).setFontSize(10))
                     .setBorder(null);
             infoTable.addCell(patientCell);
 
@@ -228,13 +317,17 @@ public class BillingServiceImpl implements BillingService {
                     .setTextAlignment(TextAlignment.RIGHT));
 
             // Service row
-            servicesTable.addCell(new Cell().add(new Paragraph(consultationType + "\n" + consultationNotes).setFontSize(10)));
-            servicesTable.addCell(new Cell().add(new Paragraph(invoice.getAmount() + " €").setFontSize(10))
+            String serviceDescription = consultationType;
+            if (observations != null && !observations.isEmpty()) {
+                serviceDescription += "\n" + observations;
+            }
+            servicesTable.addCell(new Cell().add(new Paragraph(serviceDescription).setFontSize(10)));
+            servicesTable.addCell(new Cell().add(new Paragraph(invoice.getAmount() + " MAD").setFontSize(10))
                     .setTextAlignment(TextAlignment.RIGHT));
 
             // Total row
             servicesTable.addCell(new Cell().add(new Paragraph("TOTAL").setBold()));
-            servicesTable.addCell(new Cell().add(new Paragraph(invoice.getAmount() + " €").setBold())
+            servicesTable.addCell(new Cell().add(new Paragraph(invoice.getAmount() + " MAD").setBold())
                     .setTextAlignment(TextAlignment.RIGHT)
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY));
 

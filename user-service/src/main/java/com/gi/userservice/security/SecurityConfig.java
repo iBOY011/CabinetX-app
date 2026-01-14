@@ -33,7 +33,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(ar -> ar.requestMatchers("/h2-console/**", "/actuator/**").permitAll())
                 .authorizeHttpRequests(ar -> ar.requestMatchers("/api/**").permitAll())
                 .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
-                .oauth2ResourceServer(o2 -> o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
+                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)).authenticationEntryPoint((request, response, authException) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.setStatus(200);
+                        return;
+                    }
+                    response.sendError(401, "Unauthorized");
+                }))
                 .build();
     }
 }
