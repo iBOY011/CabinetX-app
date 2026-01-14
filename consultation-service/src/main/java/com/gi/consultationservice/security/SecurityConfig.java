@@ -30,14 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(ar->ar.requestMatchers("/h2-console/**", "/graphiql/**", "/graphql/**").permitAll())
                 .authorizeHttpRequests(ar->ar.requestMatchers("/api/**").permitAll())
                 .authorizeHttpRequests(ar->ar.anyRequest().authenticated())
-                // Disable OAuth2 for permitAll endpoints
-                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)).authenticationEntryPoint((request, response, authException) -> {
-                    if (request.getRequestURI().startsWith("/api/")) {
-                        response.setStatus(200); // Allow through for inter-service calls
-                        return;
-                    }
-                    response.sendError(401, "Unauthorized");
-                }))
+                .oauth2ResourceServer(o2->o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
                 .build();
     }
 }
