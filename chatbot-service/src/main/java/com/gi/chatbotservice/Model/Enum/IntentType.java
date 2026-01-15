@@ -1,8 +1,10 @@
 package com.gi.chatbotservice.Model.Enum;
 
 public enum IntentType {
-    CONSULTER_DISPONIBILITES,
-    PRENDRE_RDV,
-    CABINETS_INFO,
+    CLINICS_INFO,
+    DOCTORS_INFO,
+    AVAILABLE_SLOTS,
+    GREETING,
+    HELP,
     AUTRE
 }

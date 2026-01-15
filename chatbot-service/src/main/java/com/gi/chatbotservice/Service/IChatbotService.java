@@ -1,14 +1,16 @@
 package com.gi.chatbotservice.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import com.gi.chatbotservice.Model.DTO.ChatMessageRequest;
 import com.gi.chatbotservice.Model.DTO.ChatMessageResponse;
-import com.gi.chatbotservice.Model.Entity.BookingContext;
+import com.gi.chatbotservice.Model.DTO.ClinicInfo;
+import com.gi.chatbotservice.Model.DTO.DoctorInfo;
+import com.gi.chatbotservice.Model.DTO.SlotInfo;
 import com.gi.chatbotservice.Model.Entity.ChatMessage;
 import com.gi.chatbotservice.Model.Entity.ChatSession;
 import com.gi.chatbotservice.Model.Enum.IntentType;
-
-import java.time.LocalDate;
-import java.util.List;
 
 public interface IChatbotService {
 
@@ -48,17 +50,17 @@ public interface IChatbotService {
     ChatMessageResponse processIntent(ChatSession session, String message, IntentType intent);
 
     /**
-     * Get available time slots for a cabinet on a specific date
+     * Get information about all active clinics
      */
-    List<String> obtenirCreneauxDisponibles(Long cabinetId, LocalDate date);
+    List<ClinicInfo> getClinicsInfo();
 
     /**
-     * Reserve an appointment
+     * Get list of doctors for a specific clinic
      */
-    Long reserverRendezVous(BookingContext context);
+    List<DoctorInfo> getDoctorsForClinic(Long clinicId);
 
     /**
-     * Get or create a booking context for a session
+     * Get available time slots for a clinic on a specific date
      */
-    BookingContext getOrCreateBookingContext(Long sessionId);
+    List<SlotInfo> getAvailableSlots(Long clinicId, LocalDate date);
 }

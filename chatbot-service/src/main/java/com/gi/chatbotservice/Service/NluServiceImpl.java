@@ -18,31 +18,45 @@ public class NluServiceImpl implements NluService {
         
         String lowerMessage = message.toLowerCase();
         
-        // Check for availability intent
+        // Check for greeting intent
+        if (lowerMessage.matches(".*(bonjour|salut|hello|hi|coucou|bonsoir).*")) {
+            return IntentType.GREETING;
+        }
+
+        // Check for help intent
+        if (lowerMessage.matches(".*(aide|help|comment|quoi faire|que peux).*")) {
+            return IntentType.HELP;
+        }
+
+        // Check for available slots intent
         if (lowerMessage.contains("disponibilit") || 
             lowerMessage.contains("libre") || 
             lowerMessage.contains("créneau") ||
             lowerMessage.contains("creneau") ||
-            lowerMessage.contains("horaire")) {
-            return IntentType.CONSULTER_DISPONIBILITES;
+            lowerMessage.contains("horaire") ||
+            lowerMessage.contains("plage")) {
+            return IntentType.AVAILABLE_SLOTS;
         }
         
-        // Check for appointment booking intent
-        if (lowerMessage.contains("rendez-vous") || 
-            lowerMessage.contains("rdv") || 
-            lowerMessage.contains("réserver") ||
-            lowerMessage.contains("reserver") ||
-            lowerMessage.contains("prendre") ||
-            lowerMessage.contains("booking")) {
-            return IntentType.PRENDRE_RDV;
+        // Check for doctors info intent
+        if (lowerMessage.contains("médecin") || 
+            lowerMessage.contains("medecin") || 
+            lowerMessage.contains("docteur") ||
+            lowerMessage.contains("dr ") ||
+            lowerMessage.contains("praticien") ||
+            lowerMessage.contains("spécialiste")) {
+            return IntentType.DOCTORS_INFO;
         }
 
-        // Check for cabinet info intent
+        // Check for clinics info intent
         if (lowerMessage.contains("cabinet") ||
+            lowerMessage.contains("clinique") ||
             lowerMessage.contains("adresse") ||
             lowerMessage.contains("information") ||
-            lowerMessage.contains("contact")) {
-            return IntentType.CABINETS_INFO;
+            lowerMessage.contains("contact") ||
+            lowerMessage.contains("où") ||
+            lowerMessage.contains("localisation")) {
+            return IntentType.CLINICS_INFO;
         }
         
         return IntentType.AUTRE;
@@ -79,37 +93,29 @@ public class NluServiceImpl implements NluService {
     }
 
     @Override
-    public String extraireNom(String message) {
+    public Long extractClinicId(String message) {
         if (message == null) {
             return null;
         }
         
-        // Pattern for "je m'appelle X" or "mon nom est X"
-        Pattern pattern = Pattern.compile(
-            "(?:je m'appelle|mon nom est|je suis|c'est)\\s+([A-Za-zÀ-ÿ]+(?:\\s+[A-Za-zÀ-ÿ]+)?)", 
-            Pattern.CASE_INSENSITIVE
-        );
+        // Pattern for "cabinet X" or "clinique X" where X is a number
+        Pattern pattern = Pattern.compile("(?:cabinet|clinique|numéro|numero|#)\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(message);
         
         if (matcher.find()) {
-            return matcher.group(1).trim();
+            return Long.parseLong(matcher.group(1));
         }
         
-        return null;
-    }
-
-    @Override
-    public String extraireTelephone(String message) {
-        if (message == null) {
-            return null;
-        }
+        // Also check for standalone numbers that might be clinic IDs
+        Pattern numberPattern = Pattern.compile("\\b(\\d{1,4})\\b");
+        Matcher numberMatcher = numberPattern.matcher(message);
         
-        // Pattern for phone numbers like "06 12 34 56 78" or "0612345678"
-        Pattern pattern = Pattern.compile("(0[67][\\s.-]?\\d{2}[\\s.-]?\\d{2}[\\s.-]?\\d{2}[\\s.-]?\\d{2})");
-        Matcher matcher = pattern.matcher(message);
-        
-        if (matcher.find()) {
-            return matcher.group(1).replaceAll("[\\s.-]", "");
+        if (numberMatcher.find()) {
+            // Only return if it's a small number (likely a clinic ID)
+            long id = Long.parseLong(numberMatcher.group(1));
+            if (id < 1000) {
+                return id;
+            }
         }
         
         return null;

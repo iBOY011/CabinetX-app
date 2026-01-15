@@ -1,10 +1,10 @@
 package com.gi.chatbotservice.Model.DTO;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -15,11 +15,11 @@ public class ChatMessageResponse {
 
     private String reply;
 
-    private List<String> creneauxDisponibles;
+    private List<ClinicInfo> clinics;
 
-    private List<String> cabinets;
-    
-    private List<String> Medecins;
+    private List<DoctorInfo> doctors;
 
-    private String confirmationMessage;
+    private List<SlotInfo> availableSlots;
+
+    private Long selectedClinicId;
 }
