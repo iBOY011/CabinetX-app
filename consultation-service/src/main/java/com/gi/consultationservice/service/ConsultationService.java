@@ -4,11 +4,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,6 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.gi.consultationservice.client.AppointmentClient;
+import com.gi.consultationservice.client.NotificationClient;
+import com.gi.consultationservice.client.PatientClient;
+import com.gi.consultationservice.client.PrescriptionClient;
+import com.gi.consultationservice.client.UserClient;
 import com.gi.consultationservice.dto.ConsultationDTO;
 import com.gi.consultationservice.dto.ConsultationSummaryDTO;
 import com.gi.consultationservice.dto.DailyStatDTO;
@@ -36,11 +38,6 @@ import com.gi.consultationservice.messaging.ConsultationCompletedEvent;
 import com.gi.consultationservice.messaging.ConsultationCompletedEventPublisher;
 import com.gi.consultationservice.repository.ConsultationEventRepository;
 import com.gi.consultationservice.repository.ConsultationRepository;
-import com.gi.consultationservice.client.AppointmentClient;
-import com.gi.consultationservice.client.NotificationClient;
-import com.gi.consultationservice.client.UserClient;
-import com.gi.consultationservice.client.PatientClient;
-import com.gi.consultationservice.client.PrescriptionClient;
 
 @Service
 @Transactional
@@ -245,10 +242,17 @@ public class ConsultationService {
             Boolean archived,
             ConsultationType type,
             Pageable pageable) {
-        Specification<Consultation> spec = Specification.where(specMedecin(medecinId))
-                .and(patientId != null ? specPatient(patientId) : null)
-                .and(archived != null ? specArchived(archived) : null)
-                .and(type != null ? specType(type) : null);
+        Specification<Consultation> spec = Specification.where(specMedecin(medecinId));
+        
+        if (patientId != null) {
+            spec = spec.and(specPatient(patientId));
+        }
+        if (archived != null) {
+            spec = spec.and(specArchived(archived));
+        }
+        if (type != null) {
+            spec = spec.and(specType(type));
+        }
 
         Page<Consultation> page = consultationRepository.findAll(spec, pageable);
         return page.map(consultationMapper::toSummary);
