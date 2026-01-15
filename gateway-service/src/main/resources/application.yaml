@@ -37,7 +37,7 @@ spring:
             - id: chatbot-service
               uri: lb://CHATBOT-SERVICE
               predicates:
-                - Path= /chatbot/**
+                - Path= /api/chatbot/**
 
             - id: clinic-service
               uri: lb://CLINIC-SERVICE

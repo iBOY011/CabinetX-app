@@ -14,11 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    private JwtAuthConverter jwtAuthConverter;
-
-    public SecurityConfig(JwtAuthConverter jwtAuthConverter) {
-        this.jwtAuthConverter = jwtAuthConverter;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -28,10 +23,10 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(ar -> ar.requestMatchers("/h2-console/**").permitAll())
-                .authorizeHttpRequests(ar -> ar.requestMatchers("/api/**").permitAll())
-                .authorizeHttpRequests(ar -> ar.anyRequest().authenticated())
-                .oauth2ResourceServer(o2 -> o2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
+                .authorizeHttpRequests(ar -> ar
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().permitAll())
                 .build();
     }
 
