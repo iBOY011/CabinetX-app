@@ -7,6 +7,49 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO de transfert pour les opérations CRUD sur les utilisateurs.
+ * 
+ * <p>Utilisé pour :
+ * <ul>
+ *   <li><b>Requêtes :</b> Création et modification utilisateurs</li>
+ *   <li><b>Réponses :</b> Envoi données utilisateur aux clients (inclut clinicId enrichi)</li>
+ * </ul></p>
+ * 
+ * <p><b>Validations :</b></p>
+ * <ul>
+ *   <li><b>firstName :</b> @NotBlank, @Size(2-50), @Pattern (lettres + accents autorisés)</li>
+ *   <li><b>lastName :</b> @NotBlank, @Size(2-50), @Pattern (lettres + accents autorisés)</li>
+ *   <li><b>login :</b> @NotBlank, @Email, @Size(max=100)</li>
+ *   <li><b>password :</b> @Size(min=6) (envoyé uniquement à la création)</li>
+ *   <li><b>phoneNumber :</b> @NotBlank, @Pattern (8-20 caractères, format international)</li>
+ *   <li><b>role :</b> @NotNull (MEDCIN, SECRETAIRE, ADMIN)</li>
+ * </ul>
+ * 
+ * <p><b>Champs enrichis (non en base) :</b></p>
+ * <ul>
+ *   <li><b>clinicId :</b> Chargé depuis DoctorProfile ou SecretaryProfile après requête</li>
+ * </ul>
+ * 
+ * <p><b>Exemple JSON :</b></p>
+ * <pre>
+ * {
+ *   "id": 1,
+ *   "keycloakUserId": "abc-123-def",
+ *   "firstName": "Dr. Ahmed",
+ *   "lastName": "Majidi",
+ *   "login": "ahmed.majidi@example.com",
+ *   "phoneNumber": "+212612345678",
+ *   "role": "MEDCIN",
+ *   "clinicId": 5,
+ *   "active": true
+ * }
+ * </pre>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -20,6 +20,39 @@ import com.gi.userservice.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Implémentation du service de gestion des utilisateurs avec Keycloak.
+ * 
+ * <p>Orchestre la création d'utilisateurs en 3 étapes :</p>
+ * <ol>
+ *   <li><b>Keycloak :</b> Crée compte SSO + assigne rôles (via KeycloakAdminClient)</li>
+ *   <li><b>PostgreSQL :</b> Insère User (id, login, firstName, lastName, keycloakUserId)</li>
+ *   <li><b>Profil :</b> Crée DoctorProfile ou SecretaryProfile si rôle = MEDCIN/SECRETAIRE</li>
+ * </ol>
+ * 
+ * <p><b>Contraintes métier enforcées :</b></p>
+ * <ul>
+ *   <li>Avant création MEDECIN : Vérifie doctorProfileRepository.findByClinicId(clinicId).isEmpty()</li>
+ *   <li>Avant création SECRETAIRE : Vérifie secretaryProfileRepository.findByClinicId(clinicId).isEmpty()</li>
+ *   <li>Si clinique a déjà médecin/secrétaire → IllegalArgumentException</li>
+ * </ul>
+ * 
+ * <p><b>Rollback transactionnel :</b></p>
+ * <ul>
+ *   <li>Si userRepository.save() échoue → keycloakAdminClient.deleteUser(keycloakUserId)</li>
+ *   <li>Évite comptes Keycloak orphelins</li>
+ * </ul>
+ * 
+ * <p><b>Enrichissement DTO :</b></p>
+ * <ul>
+ *   <li>Après mapToDTO(user), charge clinicId depuis DoctorProfile ou SecretaryProfile</li>
+ *   <li>Frontend reçoit UserDTO.clinicId pour redirection après login</li>
+ * </ul>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {

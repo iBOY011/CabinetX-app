@@ -16,6 +16,39 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+/**
+ * Configuration de sécurité Spring Security pour le microservice Analytics.
+ * 
+ * <p>Configure l'authentification OAuth2/JWT avec restrictions strictes :
+ * <ul>
+ *   <li>Sessions STATELESS (authentification par token JWT uniquement)</li>
+ *   <li>CSRF désactivé (API REST sans session)</li>
+ *   <li>CORS configuré pour autoriser les appels depuis le frontend</li>
+ *   <li>Accès restreint au rôle ADMIN pour tous les endpoints /api/**</li>
+ * </ul>
+ * 
+ * <p>Architecture de sécurité :
+ * <ul>
+ *   <li>Gateway : Point d'entrée, validation initiale des tokens</li>
+ *   <li>Analytics Service : Validation JWT + vérification rôle ADMIN</li>
+ *   <li>Console H2 : Accès libre (environnement dev uniquement)</li>
+ * </ul>
+ * 
+ * <p>Autorisation :
+ * <ul>
+ *   <li>/h2-console/** : Accès libre (dev)</li>
+ *   <li>/api/** : Rôle ADMIN requis (super-admin plateforme uniquement)</li>
+ *   <li>Autres : Authentification requise</li>
+ * </ul>
+ * 
+ * <p>Justification accès ADMIN uniquement :
+ * Les statistiques globales et KPI par cabinet contiennent des données sensibles
+ * (revenus, performance) réservées aux administrateurs de la plateforme.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)

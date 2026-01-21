@@ -10,6 +10,30 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configuration de sécurité Spring Security pour le microservice Medication.
+ * 
+ * <p><b>Stratégie :</b> OAuth2 Resource Server avec validation JWT Keycloak.</p>
+ * 
+ * <p><b>Endpoints sécurisés :</b></p>
+ * <ul>
+ *   <li><b>/api/medications/** :</b> Public (appels inter-services depuis Prescription Service)</li>
+ *   <li><b>/h2-console/** :</b> Public (développement uniquement)</li>
+ *   <li><b>Autres :</b> AUTHENTICATED (JWT bearer token requis)</li>
+ * </ul>
+ * 
+ * <p><b>Permissions métier :</b></p>
+ * <ul>
+ *   <li>MEDECIN : GET /autocomplete, GET /{id} (lecture seule pour ordonnances)</li>
+ *   <li>ADMIN : POST, PUT, DELETE (gestion catalogue)</li>
+ * </ul>
+ * 
+ * <p><b>CORS :</b> Désactivé ici, géré par Gateway (Spring Cloud Gateway).</p>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)

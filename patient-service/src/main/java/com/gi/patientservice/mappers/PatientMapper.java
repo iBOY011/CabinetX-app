@@ -9,9 +9,30 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Mapper pour la conversion entre les entités Patient et leurs DTOs.
+ * 
+ * <p>Gère les transformations bidirectionnelles entre :
+ * <ul>
+ *   <li>PatientDTO (couche présentation/API) ↔ Patient (couche persistence)</li>
+ * </ul>
+ * 
+ * <p>Préserve tous les champs incluant les adresses embarquées et les métadonnées
+ * de création. Gère correctement les valeurs null pour éviter les NullPointerException.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Component
 public class PatientMapper {
 
+    /**
+     * Convertit un PatientDTO en entité Patient.
+     * 
+     * @param dto le DTO à convertir
+     * @return l'entité Patient correspondante, ou null si dto est null
+     */
     public Patient toEntity(PatientDTO dto) {
         if (dto == null) {
             return null;
@@ -31,6 +52,12 @@ public class PatientMapper {
                 .build();
     }
 
+    /**
+     * Convertit une entité Patient en PatientDTO.
+     * 
+     * @param entity l'entité à convertir
+     * @return le DTO correspondant, ou null si entity est null
+     */
     public PatientDTO toDTO(Patient entity) {
         if (entity == null) {
             return null;

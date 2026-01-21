@@ -10,11 +10,44 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configuration de sécurité Spring Security pour le microservice Patient.
+ * 
+ * <p>Configuration adaptée à une architecture microservices avec passerelle API :
+ * <ul>
+ *   <li>CORS désactivé (géré par la gateway)</li>
+ *   <li>Sessions STATELESS (authentification JWT)</li>
+ *   <li>CSRF désactivé (API REST sans session)</li>
+ *   <li>Tous les endpoints /api/** accessibles (autorisation gérée par gateway)</li>
+ * </ul>
+ * 
+ * <p>Note : En production, la gateway (Spring Cloud Gateway) gère l'authentification
+ * OAuth2/JWT et transfère les requêtes authentifiées vers ce service. Les microservices
+ * font confiance aux requêtes de la gateway (architecture de sécurité périmétrique).
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    /**
+     * Configure la chaîne de filtres de sécurité.
+     * 
+     * <p>Stratégie de sécurité :
+     * <ul>
+     *   <li>Console H2 : accès libre (environnement dev uniquement)</li>
+     *   <li>API /api/** : accès libre (sécurisé au niveau gateway)</li>
+     *   <li>Autres endpoints : accès libre par défaut</li>
+     * </ul>
+     * 
+     * @param http l'objet HttpSecurity pour configurer la sécurité
+     * @return la chaîne de filtres configurée
+     * @throws Exception si erreur de configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http

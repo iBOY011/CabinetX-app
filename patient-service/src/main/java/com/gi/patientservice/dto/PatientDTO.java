@@ -12,6 +12,23 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * DTO pour le transfert des données de patient entre les couches de l'application.
+ * 
+ * <p>Ce DTO inclut toutes les validations nécessaires conformes aux standards marocains :
+ * <ul>
+ *   <li>Format CIN marocain (ex: AB123456)</li>
+ *   <li>Format de téléphone marocain (+212 ou 06/07)</li>
+ *   <li>Validation des noms avec support des caractères accentués</li>
+ *   <li>Types de mutuelle marocains (CNSS, CNOPS, PRIVÉE)</li>
+ * </ul>
+ * 
+ * <p>Tous les champs sont validés côté serveur avec des messages d'erreur en français.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Data
 @Builder
 @NoArgsConstructor

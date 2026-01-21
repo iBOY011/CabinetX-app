@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +28,11 @@ public class ChatbotService implements IChatbotService {
 
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final NluService nluService;
+    private final GeminiService geminiService;
     private final ClinicClient clinicClient;
     private final UserClient userClient;
     private final AppointmentClient appointmentClient;
 
-    // Default working hours for generating available slots
     private static final LocalTime WORK_START = LocalTime.of(9, 0);
     private static final LocalTime WORK_END = LocalTime.of(17, 0);
     private static final int SLOT_DURATION_MINUTES = 30;
@@ -40,52 +40,216 @@ public class ChatbotService implements IChatbotService {
     @Override
     public ChatMessageResponse traiterMessage(ChatMessageRequest request) {
         try {
+            log.info("Processing message: sessionId={}, message={}", request.getSessionId(), request.getMessage());
+            
             // Step 1: Get or create session
-            log.info("Step 1: Getting or creating session for sessionId: {}", request.getSessionId());
             ChatSession session = getOrCreateSession(request.getSessionId());
-            log.info("Session obtained: {}", session.getId());
+            log.info("Session: {}", session.getId());
 
-            // Step 2: Detect intent
-            log.info("Step 2: Detecting intent for message: {}", request.getMessage());
+            // Step 2: Detect intent to gather relevant data
             IntentType intent = detectIntent(request.getMessage());
             log.info("Detected intent: {}", intent);
 
             // Step 3: Save user message
-            log.info("Step 3: Saving user message");
             saveUserMessage(session.getId(), request.getMessage(), intent);
 
             // Step 4: Update session with last intent
-            log.info("Step 4: Updating session intent");
             updateSessionIntent(session, intent);
 
-            // Step 5: Process based on intent
-            log.info("Step 5: Processing intent");
-            ChatMessageResponse response = processIntent(session, request.getMessage(), intent);
+            // Step 5: Get conversation history for context
+            List<ChatMessage> history = chatMessageRepository.findBySessionIdOrderByDateEnvoiAsc(session.getId());
 
-            // Step 6: Save bot response
-            log.info("Step 6: Saving bot response");
+            // Step 6: Gather context data based on intent
+            String contextInfo = gatherContextInfo(intent, request.getMessage());
+            
+            // Step 7: Generate response using Gemini
+            String geminiResponse = geminiService.generateResponse(request.getMessage(), history, contextInfo);
+
+            // Step 8: Build response object
+            ChatMessageResponse response = buildResponse(session, intent, geminiResponse, request.getMessage());
+
+            // Step 9: Save bot response
             saveBotMessage(session.getId(), response.getReply());
 
             log.info("Message processed successfully");
             return response;
+            
         } catch (Exception e) {
-            log.error("Error in traiterMessage: {}", e.getMessage(), e);
+            log.error("Error processing message: {}", e.getMessage(), e);
             ChatMessageResponse errorResponse = new ChatMessageResponse();
-            errorResponse.setReply("Désolé, une erreur s'est produite. Veuillez réessayer.");
+            errorResponse.setReply("Désolé, une erreur s'est produite. Veuillez réessayer. 🙏");
             return errorResponse;
         }
+    }
+
+    /**
+     * Gather context information from other services based on detected intent
+     */
+    private String gatherContextInfo(IntentType intent, String message) {
+        StringBuilder context = new StringBuilder();
+        
+        try {
+            switch (intent) {
+                case CLINICS_INFO:
+                    List<ClinicInfo> clinics = getClinicsInfo();
+                    if (!clinics.isEmpty()) {
+                        context.append("LISTE DES CABINETS DISPONIBLES:\n");
+                        for (ClinicInfo clinic : clinics) {
+                            context.append(String.format("- Cabinet #%d: %s\n", clinic.getId(), clinic.getName()));
+                            context.append(String.format("  Spécialité: %s\n", clinic.getSpecialty()));
+                            context.append(String.format("  Adresse: %s\n", clinic.getAddress()));
+                            context.append(String.format("  Téléphone: %s\n", clinic.getPhone()));
+                            context.append("\n");
+                        }
+                    }
+                    break;
+
+                case DOCTORS_INFO:
+                    Long clinicIdForDoctors = extractClinicId(message);
+                    if (clinicIdForDoctors != null) {
+                        List<DoctorInfo> doctors = getDoctorsForClinic(clinicIdForDoctors);
+                        if (!doctors.isEmpty()) {
+                            context.append(String.format("MÉDECINS DU CABINET #%d:\n", clinicIdForDoctors));
+                            for (DoctorInfo doctor : doctors) {
+                                context.append(String.format("- Dr. %s %s\n", doctor.getFirstName(), doctor.getLastName()));
+                                if (doctor.getSpecialty() != null) {
+                                    context.append(String.format("  Spécialité: %s\n", doctor.getSpecialty()));
+                                }
+                                if (doctor.getPhone() != null) {
+                                    context.append(String.format("  Téléphone: %s\n", doctor.getPhone()));
+                                }
+                                context.append("\n");
+                            }
+                        }
+                    } else {
+                        // Provide list of clinics so user can choose
+                        List<ClinicInfo> allClinics = getClinicsInfo();
+                        context.append("L'utilisateur demande des médecins mais n'a pas précisé le cabinet.\n");
+                        context.append("CABINETS DISPONIBLES:\n");
+                        for (ClinicInfo clinic : allClinics) {
+                            context.append(String.format("- Cabinet #%d: %s\n", clinic.getId(), clinic.getName()));
+                        }
+                    }
+                    break;
+
+                case AVAILABLE_SLOTS:
+                    Long clinicIdForSlots = extractClinicId(message);
+                    LocalDate date = extractDate(message);
+                    if (date == null) {
+                        date = LocalDate.now().plusDays(1);
+                    }
+                    
+                    if (clinicIdForSlots != null) {
+                        List<SlotInfo> slots = getAvailableSlots(clinicIdForSlots, date);
+                        context.append(String.format("CRÉNEAUX DISPONIBLES POUR LE CABINET #%d LE %s:\n", 
+                                clinicIdForSlots, date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+                        if (slots.isEmpty()) {
+                            context.append("Aucun créneau disponible pour cette date.\n");
+                        } else {
+                            for (SlotInfo slot : slots) {
+                                context.append(String.format("- %s - %s\n", slot.getStartTime(), slot.getEndTime()));
+                            }
+                        }
+                    } else {
+                        List<ClinicInfo> allClinics = getClinicsInfo();
+                        context.append("L'utilisateur demande des disponibilités mais n'a pas précisé le cabinet.\n");
+                        context.append("CABINETS DISPONIBLES:\n");
+                        for (ClinicInfo clinic : allClinics) {
+                            context.append(String.format("- Cabinet #%d: %s\n", clinic.getId(), clinic.getName()));
+                        }
+                    }
+                    break;
+
+                case GREETING:
+                case HELP:
+                    // For greeting/help, provide general info about available services
+                    List<ClinicInfo> availableClinics = getClinicsInfo();
+                    context.append("INFORMATIONS GÉNÉRALES:\n");
+                    context.append(String.format("- Nombre de cabinets actifs: %d\n", availableClinics.size()));
+                    if (!availableClinics.isEmpty()) {
+                        context.append("- Cabinets: ");
+                        context.append(String.join(", ", availableClinics.stream()
+                                .map(ClinicInfo::getName).toList()));
+                        context.append("\n");
+                    }
+                    break;
+
+                default:
+                    // For unknown intent, provide basic context
+                    List<ClinicInfo> basicClinics = getClinicsInfo();
+                    if (!basicClinics.isEmpty()) {
+                        context.append("SERVICES DISPONIBLES:\n");
+                        context.append("- Informations sur les cabinets médicaux\n");
+                        context.append("- Liste des médecins par cabinet\n");
+                        context.append("- Disponibilités et créneaux horaires\n");
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            log.error("Error gathering context: {}", e.getMessage());
+            context.append("Note: Impossible de récupérer certaines informations en temps réel.\n");
+        }
+        
+        return context.toString();
+    }
+
+    /**
+     * Build response object with additional data based on intent
+     */
+    private ChatMessageResponse buildResponse(ChatSession session, IntentType intent, String geminiResponse, String message) {
+        ChatMessageResponse response = new ChatMessageResponse();
+        response.setSessionId(session.getId());
+        response.setReply(geminiResponse);
+
+        try {
+            switch (intent) {
+                case CLINICS_INFO:
+                    response.setClinics(getClinicsInfo());
+                    break;
+
+                case DOCTORS_INFO:
+                    Long clinicIdForDoctors = extractClinicId(message);
+                    if (clinicIdForDoctors != null) {
+                        response.setDoctors(getDoctorsForClinic(clinicIdForDoctors));
+                        response.setSelectedClinicId(clinicIdForDoctors);
+                    } else {
+                        response.setClinics(getClinicsInfo());
+                    }
+                    break;
+
+                case AVAILABLE_SLOTS:
+                    Long clinicIdForSlots = extractClinicId(message);
+                    LocalDate date = extractDate(message);
+                    if (date == null) {
+                        date = LocalDate.now().plusDays(1);
+                    }
+                    if (clinicIdForSlots != null) {
+                        response.setAvailableSlots(getAvailableSlots(clinicIdForSlots, date));
+                        response.setSelectedClinicId(clinicIdForSlots);
+                    } else {
+                        response.setClinics(getClinicsInfo());
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            log.error("Error building response data: {}", e.getMessage());
+        }
+
+        return response;
     }
 
     @Override
     public ChatSession getOrCreateSession(Long sessionId) {
         if (sessionId != null) {
-            Optional<ChatSession> existingSession = chatSessionRepository.findById(sessionId);
-            if (existingSession.isPresent() && existingSession.get().isActive()) {
-                return existingSession.get();
+            Optional<ChatSession> existing = chatSessionRepository.findById(sessionId);
+            if (existing.isPresent() && existing.get().isActive()) {
+                return existing.get();
             }
         }
 
-        // Create new session
         ChatSession newSession = new ChatSession();
         newSession.setDateDebut(LocalDateTime.now());
         newSession.setActive(true);
@@ -94,28 +258,56 @@ public class ChatbotService implements IChatbotService {
 
     @Override
     public ChatMessage saveUserMessage(Long sessionId, String contenu, IntentType intent) {
-        ChatMessage userMessage = new ChatMessage();
-        userMessage.setSessionId(sessionId);
-        userMessage.setEstUtilisateur(true);
-        userMessage.setContenu(contenu);
-        userMessage.setIntentDetecte(intent);
-        userMessage.setDateEnvoi(LocalDateTime.now());
-        return chatMessageRepository.save(userMessage);
+        ChatMessage message = new ChatMessage();
+        message.setSessionId(sessionId);
+        message.setEstUtilisateur(true);
+        message.setContenu(contenu);
+        message.setIntentDetecte(intent);
+        message.setDateEnvoi(LocalDateTime.now());
+        return chatMessageRepository.save(message);
     }
 
     @Override
     public ChatMessage saveBotMessage(Long sessionId, String contenu) {
-        ChatMessage botMessage = new ChatMessage();
-        botMessage.setSessionId(sessionId);
-        botMessage.setEstUtilisateur(false);
-        botMessage.setContenu(contenu);
-        botMessage.setDateEnvoi(LocalDateTime.now());
-        return chatMessageRepository.save(botMessage);
+        ChatMessage message = new ChatMessage();
+        message.setSessionId(sessionId);
+        message.setEstUtilisateur(false);
+        message.setContenu(contenu);
+        message.setDateEnvoi(LocalDateTime.now());
+        return chatMessageRepository.save(message);
     }
 
     @Override
     public IntentType detectIntent(String message) {
-        return nluService.detecterIntent(message);
+        if (message == null) return IntentType.AUTRE;
+        
+        String lower = message.toLowerCase();
+        
+        if (lower.matches(".*(bonjour|salut|hello|hi|coucou|bonsoir).*")) {
+            return IntentType.GREETING;
+        }
+        if (lower.matches(".*(aide|help|comment|quoi faire|que peux).*")) {
+            return IntentType.HELP;
+        }
+        if (lower.contains("disponibilit") || lower.contains("libre") || 
+            lower.contains("créneau") || lower.contains("creneau") || 
+            lower.contains("horaire") || lower.contains("plage")) {
+            return IntentType.AVAILABLE_SLOTS;
+        }
+        if (lower.contains("médecin") || lower.contains("medecin") || 
+            lower.contains("docteur") || lower.contains("dr ") || 
+            lower.contains("praticien") || lower.contains("spécialiste")) {
+            return IntentType.DOCTORS_INFO;
+        }
+        if (lower.contains("cabinet") || lower.contains("clinique") || 
+            lower.contains("adresse") || lower.contains("information") || 
+            lower.contains("contact") || lower.contains("où") || 
+            lower.contains("localisation") || lower.contains("telephone") ||
+            lower.contains("téléphone") || lower.contains("numero")) {
+            return IntentType.CLINICS_INFO;
+        }
+        
+        return IntentType.AUTRE;
     }
 
     @Override
@@ -126,27 +318,8 @@ public class ChatbotService implements IChatbotService {
 
     @Override
     public ChatMessageResponse processIntent(ChatSession session, String message, IntentType intent) {
-        ChatMessageResponse response = new ChatMessageResponse();
-        response.setSessionId(session.getId());
-
-        switch (intent) {
-            case CLINICS_INFO:
-                return handleClinicsInfo(response);
-            case DOCTORS_INFO:
-                return handleDoctorsInfo(session, message, response);
-            case AVAILABLE_SLOTS:
-                return handleAvailableSlots(session, message, response);
-            case GREETING:
-                return handleGreeting(response);
-            case HELP:
-                return handleHelp(response);
-            default:
-                response.setReply("Je ne comprends pas votre demande. Vous pouvez me demander:\n" +
-                        "- Des informations sur nos cabinets\n" +
-                        "- Les médecins d'un cabinet\n" +
-                        "- Les créneaux disponibles pour un cabinet");
-                return response;
-        }
+        // This method is now delegated to gatherContextInfo + Gemini
+        return null;
     }
 
     @Override
@@ -164,7 +337,7 @@ public class ChatbotService implements IChatbotService {
         try {
             return userClient.getDoctorsByClinic(clinicId, "MEDECIN");
         } catch (Exception e) {
-            log.error("Error fetching doctors for clinic {}: {}", clinicId, e.getMessage());
+            log.error("Error fetching doctors: {}", e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -172,160 +345,74 @@ public class ChatbotService implements IChatbotService {
     @Override
     public List<SlotInfo> getAvailableSlots(Long clinicId, LocalDate date) {
         try {
-            // Get existing appointments for the clinic on the given date
-            List<AppointmentInfo> existingAppointments = appointmentClient.getAppointmentsByDate(date, clinicId);
-
-            // Generate all possible slots
+            List<AppointmentInfo> appointments = appointmentClient.getAppointmentsByDate(date, clinicId);
             List<SlotInfo> allSlots = generateAllSlots();
 
-            // Mark slots as unavailable if they overlap with existing appointments
             for (SlotInfo slot : allSlots) {
-                for (AppointmentInfo appointment : existingAppointments) {
-                    if (slotsOverlap(slot.getStartTime(), slot.getEndTime(),
-                            appointment.getHeureDebut(), appointment.getHeureFin())) {
+                for (AppointmentInfo apt : appointments) {
+                    if (slotsOverlap(slot.getStartTime(), slot.getEndTime(), 
+                            apt.getHeureDebut(), apt.getHeureFin())) {
                         slot.setAvailable(false);
                         break;
                     }
                 }
             }
 
-            // Return only available slots
-            return allSlots.stream()
-                    .filter(SlotInfo::isAvailable)
-                    .toList();
+            return allSlots.stream().filter(SlotInfo::isAvailable).toList();
         } catch (Exception e) {
-            log.error("Error fetching available slots for clinic {} on {}: {}", clinicId, date, e.getMessage());
+            log.error("Error fetching slots: {}", e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    private ChatMessageResponse handleClinicsInfo(ChatMessageResponse response) {
-        List<ClinicInfo> clinics = getClinicsInfo();
-
-        if (clinics.isEmpty()) {
-            response.setReply("Désolé, je n'ai pas pu récupérer les informations sur nos cabinets. Veuillez réessayer plus tard.");
-        } else {
-            StringBuilder sb = new StringBuilder("Voici la liste de nos cabinets actifs:\n\n");
-            for (ClinicInfo clinic : clinics) {
-                sb.append("📍 **").append(clinic.getName()).append("**\n");
-                sb.append("   Spécialité: ").append(clinic.getSpecialty()).append("\n");
-                sb.append("   Adresse: ").append(clinic.getAddress()).append("\n");
-                sb.append("   Téléphone: ").append(clinic.getPhone()).append("\n\n");
-            }
-            sb.append("Pour plus d'informations sur les médecins ou les créneaux disponibles, précisez le nom du cabinet.");
-            response.setReply(sb.toString());
-            response.setClinics(clinics);
+    private Long extractClinicId(String message) {
+        if (message == null) return null;
+        
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "(?:cabinet|clinique|numéro|numero|#)\\s*(\\d+)", 
+                java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Matcher matcher = pattern.matcher(message);
+        
+        if (matcher.find()) {
+            return Long.parseLong(matcher.group(1));
         }
-
-        return response;
+        
+        // Check for standalone small numbers
+        java.util.regex.Pattern numberPattern = java.util.regex.Pattern.compile("\\b(\\d{1,3})\\b");
+        java.util.regex.Matcher numberMatcher = numberPattern.matcher(message);
+        
+        if (numberMatcher.find()) {
+            long id = Long.parseLong(numberMatcher.group(1));
+            if (id > 0 && id < 100) {
+                return id;
+            }
+        }
+        
+        return null;
     }
 
-    private ChatMessageResponse handleDoctorsInfo(ChatSession session, String message, ChatMessageResponse response) {
-        // Try to extract clinic ID from message
-        Long clinicId = nluService.extractClinicId(message);
-
-        if (clinicId == null) {
-            // Check if user previously asked about clinics
-            List<ClinicInfo> clinics = getClinicsInfo();
-            if (clinics.isEmpty()) {
-                response.setReply("Pour voir les médecins, veuillez d'abord me préciser le cabinet.");
-            } else {
-                response.setReply("Pour voir les médecins, veuillez me préciser le numéro ou le nom du cabinet:\n");
-                StringBuilder sb = new StringBuilder();
-                for (ClinicInfo clinic : clinics) {
-                    sb.append("- ").append(clinic.getId()).append(": ").append(clinic.getName()).append("\n");
-                }
-                response.setReply(response.getReply() + sb);
-                response.setClinics(clinics);
-            }
-            return response;
+    private LocalDate extractDate(String message) {
+        if (message == null) return null;
+        
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})");
+        java.util.regex.Matcher matcher = pattern.matcher(message);
+        
+        if (matcher.find()) {
+            int day = Integer.parseInt(matcher.group(1));
+            int month = Integer.parseInt(matcher.group(2));
+            int year = Integer.parseInt(matcher.group(3));
+            return LocalDate.of(year, month, day);
         }
-
-        List<DoctorInfo> doctors = getDoctorsForClinic(clinicId);
-
-        if (doctors.isEmpty()) {
-            response.setReply("Aucun médecin trouvé pour ce cabinet.");
-        } else {
-            StringBuilder sb = new StringBuilder("Voici les médecins du cabinet:\n\n");
-            for (DoctorInfo doctor : doctors) {
-                sb.append("👨‍⚕️ Dr. ").append(doctor.getFirstName()).append(" ").append(doctor.getLastName()).append("\n");
-                if (doctor.getSpecialty() != null) {
-                    sb.append("   Spécialité: ").append(doctor.getSpecialty()).append("\n");
-                }
-                if (doctor.getPhone() != null) {
-                    sb.append("   Téléphone: ").append(doctor.getPhone()).append("\n");
-                }
-                sb.append("\n");
-            }
-            response.setReply(sb.toString());
-            response.setDoctors(doctors);
-            response.setSelectedClinicId(clinicId);
+        
+        String lower = message.toLowerCase();
+        if (lower.contains("demain")) {
+            return LocalDate.now().plusDays(1);
         }
-
-        return response;
-    }
-
-    private ChatMessageResponse handleAvailableSlots(ChatSession session, String message, ChatMessageResponse response) {
-        // Extract clinic ID and date from message
-        Long clinicId = nluService.extractClinicId(message);
-        LocalDate date = nluService.extraireDate(message);
-
-        if (date == null) {
-            date = LocalDate.now().plusDays(1); // Default to tomorrow
+        if (lower.contains("aujourd")) {
+            return LocalDate.now();
         }
-
-        if (clinicId == null) {
-            List<ClinicInfo> clinics = getClinicsInfo();
-            if (clinics.isEmpty()) {
-                response.setReply("Pour voir les créneaux disponibles, veuillez me préciser le cabinet.");
-            } else {
-                response.setReply("Pour voir les créneaux disponibles, veuillez me préciser le numéro du cabinet:\n");
-                StringBuilder sb = new StringBuilder();
-                for (ClinicInfo clinic : clinics) {
-                    sb.append("- ").append(clinic.getId()).append(": ").append(clinic.getName()).append("\n");
-                }
-                response.setReply(response.getReply() + sb);
-                response.setClinics(clinics);
-            }
-            return response;
-        }
-
-        List<SlotInfo> slots = getAvailableSlots(clinicId, date);
-
-        if (slots.isEmpty()) {
-            response.setReply("Aucun créneau disponible pour le " + date + ". Veuillez essayer une autre date.");
-        } else {
-            StringBuilder sb = new StringBuilder("Voici les créneaux disponibles pour le **")
-                    .append(date).append("**:\n\n");
-            for (SlotInfo slot : slots) {
-                sb.append("🕐 ").append(slot.getStartTime()).append(" - ").append(slot.getEndTime()).append("\n");
-            }
-            sb.append("\nPour prendre rendez-vous, veuillez contacter le cabinet directement.");
-            response.setReply(sb.toString());
-            response.setAvailableSlots(slots);
-            response.setSelectedClinicId(clinicId);
-        }
-
-        return response;
-    }
-
-    private ChatMessageResponse handleGreeting(ChatMessageResponse response) {
-        response.setReply("Bonjour ! 👋 Bienvenue sur notre assistant virtuel.\n\n" +
-                "Je peux vous aider avec:\n" +
-                "- 🏥 Informations sur nos cabinets\n" +
-                "- 👨‍⚕️ Liste des médecins disponibles\n" +
-                "- 📅 Créneaux horaires disponibles\n\n" +
-                "Comment puis-je vous aider aujourd'hui ?");
-        return response;
-    }
-
-    private ChatMessageResponse handleHelp(ChatMessageResponse response) {
-        response.setReply("Je suis votre assistant virtuel. Voici ce que je peux faire pour vous:\n\n" +
-                "📍 **Informations sur les cabinets**: Dites 'cabinets' ou 'cliniques'\n" +
-                "👨‍⚕️ **Médecins d'un cabinet**: Dites 'médecins du cabinet X'\n" +
-                "📅 **Créneaux disponibles**: Dites 'créneaux disponibles pour le cabinet X'\n\n" +
-                "N'hésitez pas à me poser vos questions !");
-        return response;
+        
+        return null;
     }
 
     private List<SlotInfo> generateAllSlots() {

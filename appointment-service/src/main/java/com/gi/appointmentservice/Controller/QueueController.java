@@ -18,6 +18,34 @@ import com.gi.appointmentservice.Service.QueueService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Contrôleur REST pour la gestion de la file d'attente des patients.
+ * 
+ * <p>Expose les endpoints de gestion de la file d'attente virtuelle permettant
+ * d'organiser le flux de patients en salle d'attente :
+ * <ul>
+ *   <li>GET /api/queue/by-date : Consultation de la file d'attente</li>
+ *   <li>PUT /api/queue/add/{id} : Ajout d'un patient dans la file</li>
+ *   <li>PUT /api/queue/remove/{id} : Retrait d'un patient de la file</li>
+ *   <li>PUT /api/queue/call-next/{id} : Appel du patient suivant</li>
+ *   <li>POST /api/queue/reorder : Réordonnancement manuel (drag & drop)</li>
+ * </ul>
+ * 
+ * <p>Workflow typique :
+ * <ol>
+ *   <li>Patient arrive au cabinet → PUT /api/queue/add/{appointmentId}</li>
+ *   <li>Écran d'attente affiche la file → GET /api/queue/by-date</li>
+ *   <li>Médecin appelle le patient suivant → PUT /api/queue/call-next/{appointmentId}</li>
+ *   <li>Patient entre en consultation (statut EN_CONSULTATION)</li>
+ * </ol>
+ * 
+ * <p>Sécurité : Accès réservé aux rôles SECRETAIRE et MEDECIN.
+ * Les patients peuvent consulter leur position dans la file en lecture seule.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/queue")

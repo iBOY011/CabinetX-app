@@ -14,6 +14,31 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implémentation du service de gestion des cabinets médicaux.
+ * 
+ * <p>Cette classe implémente la logique métier pour la gestion des cabinets, incluant :
+ * <ul>
+ *   <li><b>Création :</b> Validation du téléphone marocain (+212), serviceEndDate future</li>
+ *   <li><b>Activation/Désactivation :</b> Toggle status ACTIVE/INACTIVE (gestion abonnements)</li>
+ *   <li><b>Recherche proches expiration :</b> Alerte cabinets dont serviceEndDate < now + daysBefore</li>
+ * </ul></p>
+ * 
+ * <p><b>Dépendances :</b></p>
+ * <ul>
+ *   <li>ClinicRepository - Accès données PostgreSQL</li>
+ *   <li>ClinicMapper - Conversion Entity ↔ DTO</li>
+ * </ul>
+ * 
+ * <p><b>Exceptions levées :</b></p>
+ * <ul>
+ *   <li>ResourceNotFoundException - Cabinet non trouvé par ID</li>
+ * </ul>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Service
 @RequiredArgsConstructor
 public class ClinicServiceImpl implements ClinicService {

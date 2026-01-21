@@ -12,4 +12,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     ChatMessage save(ChatMessage message);
 
     List<ChatMessage> findBySessionId(Long sessionId);
+    
+    List<ChatMessage> findBySessionIdOrderByDateEnvoiAsc(Long sessionId);
 }
+

@@ -19,6 +19,45 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Entité représentant une consultation médicale.
+ * 
+ * <p>Stockée dans la base de données consultation_db. Une consultation est
+ * toujours liée à un rendez-vous (relation 1-1 via rendezVousId unique).
+ * 
+ * <p>Informations stockées :
+ * <ul>
+ *   <li>Références : rendezVousId, patientId, medecinId, cabinetId</li>
+ *   <li>Médicales : examenClinique, diagnostic, traitement</li>
+ *   <li>Complémentaires : examenSupplementaire, observations</li>
+ *   <li>Métadonnées : dateConsultation, archived, archivedAt</li>
+ * </ul>
+ * 
+ * <p>Cycle de vie :
+ * <ol>
+ *   <li>Création : archived = false, champs médicaux vides</li>
+ *   <li>En cours : Médecin remplit progressivement les champs</li>
+ *   <li>Terminée : archived = true, archivedAt = maintenant</li>
+ *   <li>Archivée : Consultation visible dans historique patient</li>
+ * </ol>
+ * 
+ * <p>Types de consultation (ConsultationType) :
+ * <ul>
+ *   <li>CONSULTATION : Première visite ou nouvelle pathologie</li>
+ *   <li>CONTROL : Suivi d'un traitement existant</li>
+ * </ul>
+ * 
+ * <p>Contraintes :
+ * <ul>
+ *   <li>rendezVousId : UNIQUE (une consultation par RDV)</li>
+ *   <li>Champs obligatoires : rendezVousId, patientId, medecinId, cabinetId, type, dateConsultation</li>
+ *   <li>Champs texte : limités à 2000 caractères</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Entity
 @Getter
 @Setter

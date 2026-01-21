@@ -7,6 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClinicMapper {
 
+    /**
+     * Convertit un ClinicDTO en entité Clinic.
+     * 
+     * @param request Le DTO source (peut être null)
+     * @return L'entité Clinic ou null si request est null
+     * 
+     * <p><b>Usage :</b> Lors de la création d'un nouveau cabinet via POST /api/clinics</p>
+     */
     public Clinic toEntity(ClinicDTO request) {
         if (request == null)
             return null;

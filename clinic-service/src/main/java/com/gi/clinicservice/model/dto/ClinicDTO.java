@@ -9,6 +9,43 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * DTO de transfert pour les opérations CRUD sur les cabinets médicaux.
+ * 
+ * <p>Utilisé pour :
+ * <ul>
+ *   <li><b>Requêtes :</b> Création et modification de cabinets</li>
+ *   <li><b>Réponses :</b> Envoi des données cabinet aux clients (Frontend, autres services)</li>
+ * </ul></p>
+ * 
+ * <p><b>Validations :</b></p>
+ * <ul>
+ *   <li><b>name :</b> @NotBlank, @Size(min=2, max=100)</li>
+ *   <li><b>specialty :</b> @NotBlank, @Size(min=2, max=100)</li>
+ *   <li><b>phone :</b> @NotBlank, @Pattern (format marocain +212XXXXXXXXX ou 0XXXXXXXXX)</li>
+ *   <li><b>address :</b> @NotBlank, @Size(min=5, max=200)</li>
+ *   <li><b>logoUrl :</b> @Pattern (URL valide http/https)</li>
+ *   <li><b>status :</b> @NotNull (ACTIVE par défaut)</li>
+ *   <li><b>serviceEndDate :</b> @NotNull, @Future (doit être dans le futur)</li>
+ * </ul>
+ * 
+ * <p><b>Exemple JSON :</b></p>
+ * <pre>
+ * {
+ *   "name": "Cabinet Dentaire Rabat",
+ *   "specialty": "Dentisterie",
+ *   "phone": "+212612345678",
+ *   "address": "123 Avenue Hassan II, Rabat",
+ *   "logoUrl": "https://example.com/logo.png",
+ *   "status": "ACTIVE",
+ *   "serviceEndDate": "2025-12-31"
+ * }
+ * </pre>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

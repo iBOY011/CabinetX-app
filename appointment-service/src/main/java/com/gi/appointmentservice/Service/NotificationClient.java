@@ -4,7 +4,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Client to communicate with notification-service
+ * Client HTTP pour la communication avec le microservice Notification.
+ * 
+ * <p>Gère l'envoi de notifications aux utilisateurs (médecins, patients) lors
+ * d'événements liés aux rendez-vous et à la file d'attente.
+ * 
+ * <p>Types de notifications envoyées :
+ * <ul>
+ *   <li>Notification médecin : Patient appelé en consultation</li>
+ *   <li>Notification patient : Changement de position dans la file</li>
+ *   <li>Rappel rendez-vous : 24h et 1h avant le RDV</li>
+ *   <li>Confirmation : Rendez-vous créé/modifié</li>
+ * </ul>
+ * 
+ * <p>Canaux de notification supportés (côté Notification Service) :
+ * <ul>
+ *   <li>SMS : Via Twilio pour patients marocains</li>
+ *   <li>Push : Notifications mobiles via Firebase</li>
+ *   <li>Email : Pour confirmations et rappels</li>
+ * </ul>
+ * 
+ * <p>Pattern architectural :
+ * <ul>
+ *   <li>Fire-and-forget : Appels asynchrones non bloquants</li>
+ *   <li>Gestion d'erreurs : Logs détaillés, pas de propagation d'exception</li>
+ *   <li>Service Discovery : Résolution via Eureka</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
  */
 @Service
 public class NotificationClient {
@@ -16,9 +45,27 @@ public class NotificationClient {
     }
 
     /**
-     * Send patient consultation notification to a doctor
-     * Calls: POST
-     * http://NOTIFICATION-SERVICE/api/notifications/patient-consultation
+     * Envoie une notification au médecin lorsqu'un patient est appelé en consultation.
+     * 
+     * <p>Déclenchée par QueueService.callNext() lorsque le patient passe de EN_ATTENTE
+     * à EN_CONSULTATION. Le médecin reçoit une notification push et/ou SMS avec :
+     * <ul>
+     *   <li>Nom du patient</li>
+     *   <li>Âge du patient</li>
+     *   <li>Motif du rendez-vous</li>
+     *   <li>Heure du rendez-vous</li>
+     * </ul>
+     * 
+     * <p>Méthode non bloquante : les erreurs sont loggées mais ne font pas échouer
+     * l'appel du patient (la consultation peut continuer même si notification échoue).
+     * 
+     * @param doctorId identifiant du médecin destinataire
+     * @param appointmentId identifiant du rendez-vous
+     * @param patientId identifiant du patient
+     * @param patientName nom complet du patient
+     * @param patientAge âge du patient en années
+     * @param reason motif de consultation (CONSULTATION, CONTROL)
+     * @param appointmentTime heure du rendez-vous au format HH:mm
      */
     public void sendPatientConsultationNotification(
             Long doctorId,

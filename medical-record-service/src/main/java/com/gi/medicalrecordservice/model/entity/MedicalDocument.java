@@ -22,6 +22,47 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entité représentant un document médical attaché à un dossier patient.
+ * 
+ * <p>Stockée dans la table medical_document. Contient les documents binaires
+ * (radiographies, analyses de laboratoire, ordonnances, etc.) associés
+ * au dossier médical d'un patient.
+ * 
+ * <p>Informations stockées :
+ * <ul>
+ *   <li>fileName : Nom original du fichier uploadé</li>
+ *   <li>fileType : Type MIME (ex: application/pdf, image/jpeg)</li>
+ *   <li>fileUrl : URL externe (si stockage S3/Azure) - optionnel</li>
+ *   <li>documentType : Catégorie (RADIOLOGY, LAB_RESULT, PRESCRIPTION, OTHER)</li>
+ *   <li>content : Contenu binaire du fichier (BLOB)</li>
+ *   <li>additionDate : Date d'ajout automatique</li>
+ * </ul>
+ * 
+ * <p>Stratégie de stockage :
+ * <ul>
+ *   <li>Actuel : Stockage en base de données (champ BLOB content)</li>
+ *   <li>Future : Migration possible vers S3/Azure Blob (fileUrl renseigné, content null)</li>
+ * </ul>
+ * 
+ * <p>Relation ManyToOne avec MedicalRecord :
+ * <ul>
+ *   <li>FetchType LAZY : Chargé uniquement si accédé</li>
+ *   <li>Cascade : Géré par le parent (MedicalRecord)</li>
+ * </ul>
+ * 
+ * <p>Types de documents supportés (DocumentType) :
+ * <ul>
+ *   <li>RADIOLOGY : Radiographies, IRM, Scanner</li>
+ *   <li>LAB_RESULT : Analyses de laboratoire (sang, urine, etc.)</li>
+ *   <li>PRESCRIPTION : Ordonnances médicales</li>
+ *   <li>OTHER : Autres documents (rapports, courriers, etc.)</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Entity
 @Table(name = "medical_document")
 @Getter

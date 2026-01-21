@@ -23,6 +23,38 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Implémentation du service de gestion des dossiers médicaux patients.
+ * 
+ * <p>Gère le cycle de vie complet des dossiers médicaux :
+ * <ul>
+ *   <li>Création automatique lors de la première consultation</li>
+ *   <li>Mise à jour des antécédents, allergies, traitements</li>
+ *   <li>Ajout/suppression de documents médicaux (BLOB storage)</li>
+ *   <li>Enrichissement avec historique consultations (via ConsultationService)</li>
+ * </ul>
+ * 
+ * <p>Architecture de stockage :
+ * <ul>
+ *   <li>MedicalRecord : Données textuelles (antécédents, allergies, etc.)</li>
+ *   <li>MedicalDocument : Fichiers binaires (radiographies, analyses) en BLOB</li>
+ *   <li>ConsultationHistory : Récupéré à la demande depuis ConsultationService</li>
+ * </ul>
+ * 
+ * <p>Intégrations microservices :
+ * <ul>
+ *   <li>ConsultationServiceClient : Récupération historique consultations</li>
+ *   <li>Future : PatientService pour validation patientId</li>
+ * </ul>
+ * 
+ * <p>Pattern "Enrichment" :
+ * Les méthodes enrichRecord() fusionnent les données locales (dossier)
+ * avec les données distantes (consultations) pour fournir une vue complète.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Service
 @Transactional
 @Slf4j
@@ -43,6 +75,15 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         this.medicalRecordMapper = medicalRecordMapper;
     }
 
+    /**
+     * Ouvre ou crée le dossier médical d'un patient.
+     * 
+     * <p>Pattern "Get or Create" : Vérifie l'existence du dossier,
+     * le crée si absent, puis l'enrichit avec l'historique consultations.
+     * 
+     * @param patientId identifiant du patient
+     * @return MedicalRecordDTO enrichi avec consultations
+     */
     @Override
     public MedicalRecordDTO openOrCreateRecord(Long patientId) {
         MedicalRecord medicalRecord = medicalRecordRepository.findByPatientId(patientId)
@@ -71,6 +112,22 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         return enrichRecord(medicalRecord, patientId);
     }
 
+    /**
+     * Ajoute un document médical au dossier.
+     * 
+     * <p>Le fichier est converti en byte[] et stocké en base de données
+     * dans le champ content (type BLOB). Les métadonnées (nom, type MIME,
+     * type de document) sont également stockées.
+     * 
+     * <p>Formats supportés : Tous (PDF, JPG, PNG, DICOM, etc.)
+     * Limite de taille : Définie par spring.servlet.multipart.max-file-size
+     * 
+     * @param recordId identifiant du dossier
+     * @param file fichier multipart à uploader
+     * @param documentType type de document médical
+     * @return MedicalDocumentDTO du document créé
+     * @throws ResponseStatusException si erreur lecture fichier
+     */
     @Override
     public MedicalDocumentDTO addDocument(Long recordId, MultipartFile file, DocumentType documentType) {
         MedicalRecord medicalRecord = loadRecord(recordId);
