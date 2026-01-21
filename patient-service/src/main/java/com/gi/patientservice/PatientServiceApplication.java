@@ -10,6 +10,30 @@ import org.springframework.context.annotation.Bean;
 import com.gi.patientservice.entities.Patient;
 import com.gi.patientservice.repository.PatientRepository;
 
+/**
+ * Classe principale du microservice Patient.
+ * 
+ * <p>Ce microservice gère le cycle de vie complet des patients dans le système CabinetX :
+ * <ul>
+ *   <li>CRUD complet des données patient</li>
+ *   <li>Validation des données (CIN, téléphone marocains)</li>
+ *   <li>Recherche avancée (nom, prénom, CIN)</li>
+ *   <li>Audit trail des modifications</li>
+ *   <li>Gestion des adresses et couvertures médicales</li>
+ * </ul>
+ * 
+ * <p>Architecture :
+ * <ul>
+ *   <li>Port : 8081</li>
+ *   <li>Base de données : PostgreSQL (patient_db)</li>
+ *   <li>Sécurité : Authentification JWT via Gateway</li>
+ *   <li>Découverte : Eureka Service Discovery</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @SpringBootApplication
 public class PatientServiceApplication {
 
@@ -17,6 +41,15 @@ public class PatientServiceApplication {
         SpringApplication.run(PatientServiceApplication.class, args);
     }
 
+    /**
+     * Initialise des données de test au démarrage (commenté par défaut).
+     * 
+     * <p>Ce bean CommandLineRunner peut être décommenté pour peupler la base
+     * avec des patients de test représentatifs (noms marocains, formats locaux).
+     * 
+     * @param patientRepository le repository pour sauvegarder les patients
+     * @return le CommandLineRunner exécuté au démarrage
+     */
     @Bean
     CommandLineRunner start(PatientRepository patientRepository) {
         return args -> {

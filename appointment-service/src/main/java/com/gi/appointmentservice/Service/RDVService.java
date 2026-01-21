@@ -20,6 +20,38 @@ import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service métier pour la gestion du cycle de vie des rendez-vous (RDV).
+ * 
+ * <p>Gère l'ensemble des opérations liées aux rendez-vous médicaux :
+ * <ul>
+ *   <li>Création avec validation des règles métier</li>
+ *   <li>Modification des informations (date, heure, motif)</li>
+ *   <li>Gestion des statuts (CONFIRMÉ, EN_CONSULTATION, TERMINÉ, ANNULÉ)</li>
+ *   <li>Suppression de rendez-vous</li>
+ *   <li>Consultation par patient et par date</li>
+ *   <li>Recherche par cabinet et date</li>
+ * </ul>
+ * 
+ * <p>Règles métier appliquées :
+ * <ul>
+ *   <li>Heure début doit être avant heure fin</li>
+ *   <li>Pas de rendez-vous dans le passé</li>
+ *   <li>Un patient ne peut avoir qu'un seul rendez-vous actif par jour</li>
+ *   <li>Transitions de statut contrôlées (pas de changement direct CONFIRMÉ → TERMINÉ)</li>
+ *   <li>Statuts terminaux (ANNULÉ, TERMINÉ, MISSING) non modifiables</li>
+ * </ul>
+ * 
+ * <p>Intégrations :
+ * <ul>
+ *   <li>PatientClient : Récupération des informations patient</li>
+ *   <li>Kafka : Réception de messages via welcomeConsumer</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Service
 @RequiredArgsConstructor
 
@@ -29,6 +61,23 @@ public class RDVService {
     private final PatientClient patientClient;
     private PatientInfoDTO patientInfo;
 
+    /**
+     * Crée un nouveau rendez-vous avec validation complète des règles métier.
+     * 
+     * <p>Validations appliquées :
+     * <ol>
+     *   <li>Heure de début strictement antérieure à l'heure de fin</li>
+     *   <li>Interdiction des rendez-vous dans le passé (date ou heure)</li>
+     *   <li>Vérification de l'unicité : un patient ne peut avoir qu'un seul RDV actif par jour</li>
+     * </ol>
+     * 
+     * <p>Après création, enrichit la réponse avec les informations complètes du patient
+     * en interrogeant le microservice Patient.
+     * 
+     * @param rdvreqDto les informations du rendez-vous à créer
+     * @return RDVResponse contenant le rendez-vous créé avec les infos patient
+     * @throws IllegalArgumentException si validation échouée ou doublon détecté
+     */
     public RDVResponse createRendezVous(RDVRequest rdvreqDto) {
 
         // 1. date début < date fin
@@ -67,6 +116,24 @@ public class RDVService {
 
     }
 
+    /**
+     * Met à jour les informations d'un rendez-vous existant.
+     * 
+     * <p>Permet de modifier :
+     * <ul>
+     *   <li>Date et horaires (début/fin)</li>
+     *   <li>Motif du rendez-vous</li>
+     *   <li>Notes complémentaires</li>
+     * </ul>
+     * 
+     * <p>Note : Le statut doit être modifié via updateStatusRendezVous() pour 
+     * garantir les transitions valides.
+     * 
+     * @param rdvId identifiant du rendez-vous à modifier
+     * @param updateDto nouvelles informations du rendez-vous
+     * @return RDVResponse contenant le rendez-vous mis à jour
+     * @throws ResourceNotFoundException si le rendez-vous n'existe pas
+     */
     public RDVResponse updateRendezVous(Long rdvId, UpdateDto updateDto) {
         RendezVous rdv = rdvRepository.findById(rdvId)
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + rdvId));
@@ -113,6 +180,25 @@ public class RDVService {
         };
     }
 
+    /**
+     * Met à jour le statut d'un rendez-vous avec validation des transitions.
+     * 
+     * <p>Règles de transition de statut :
+     * <ul>
+     *   <li>Statuts terminaux (ANNULÉ, TERMINÉ, MISSING) : non modifiables</li>
+     *   <li>Depuis EN_CONSULTATION : transition uniquement vers TERMINÉ</li>
+     *   <li>Depuis CONFIRMÉ : pas de transition directe vers TERMINÉ (doit passer par EN_CONSULTATION)</li>
+     * </ul>
+     * 
+     * <p>Ces règles garantissent un workflow cohérent et traçable du cycle de vie
+     * du rendez-vous.
+     * 
+     * @param id identifiant du rendez-vous
+     * @param statut nouveau statut à appliquer
+     * @return RDVResponse contenant le rendez-vous avec statut mis à jour
+     * @throws ResourceNotFoundException si le rendez-vous n'existe pas
+     * @throws IllegalArgumentException si la transition de statut est invalide
+     */
     public RDVResponse updateStatusRendezVous(Long id, StatutRDV statut) {
         RendezVous rdv = rdvRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RendezVous not found with id: " + id));

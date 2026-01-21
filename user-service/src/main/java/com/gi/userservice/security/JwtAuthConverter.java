@@ -15,6 +15,32 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Convertisseur JWT pour extraire les rôles Keycloak depuis les tokens JWT.
+ * 
+ * <p><b>Fonctionnement :</b></p>
+ * <ol>
+ *   <li>Récupère le JWT du header Authorization: Bearer {token}</li>
+ *   <li>Extrait les rôles depuis le claim "realm_access.roles" (Keycloak)</li>
+ *   <li>Convertit en GrantedAuthority Spring Security (ex: "MEDCIN", "ADMIN")</li>
+ * </ol>
+ * 
+ * <p><b>Exemple JWT Keycloak :</b></p>
+ * <pre>
+ * {
+ *   "realm_access": {
+ *     "roles": ["MEDCIN", "SECRETAIRE"]
+ *   },
+ *   "preferred_username": "dr.majidi@clinic.ma"
+ * }
+ * </pre>
+ * 
+ * <p><b>Sortie :</b> JwtAuthenticationToken avec authorities [MEDCIN, SECRETAIRE]</p>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Component
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter=new JwtGrantedAuthoritiesConverter();

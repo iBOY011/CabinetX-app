@@ -28,6 +28,40 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+/**
+ * Contrôleur REST pour la gestion des consultations médicales.
+ * 
+ * <p>Expose les endpoints suivants :
+ * <ul>
+ *   <li>POST /api/consultations : Création de consultation</li>
+ *   <li>PUT /api/consultations/{id} : Modification de consultation</li>
+ *   <li>DELETE /api/consultations/{id} : Suppression de consultation</li>
+ *   <li>GET /api/consultations/{id} : Consultation par ID</li>
+ *   <li>GET /api/consultations/rendezvous/{rendezVousId} : Par rendez-vous</li>
+ *   <li>GET /api/consultations/patients/{patientId}/historique : Historique patient</li>
+ *   <li>GET /api/consultations/medecins/{medecinId}/jour : Consultations du jour</li>
+ *   <li>GET /api/consultations/medecins/{medecinId}/periode : Sur une période</li>
+ * </ul>
+ * 
+ * <p>Workflow typique :
+ * <ol>
+ *   <li>RDV terminé → Médecin crée consultation (POST)</li>
+ *   <li>Médecin remplit examen clinique, diagnostic, traitement (PUT)</li>
+ *   <li>Médecin archive la consultation (PUT archived=true)</li>
+ *   <li>Événement Kafka publié → Facturation générée automatiquement</li>
+ * </ol>
+ * 
+ * <p>Sécurité :
+ * <ul>
+ *   <li>MEDECIN : Création, modification (propres consultations)</li>
+ *   <li>SECRETAIRE : Lecture uniquement</li>
+ *   <li>PATIENT : Consultation de son propre historique</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @RestController
 @RequestMapping("/api/consultations")
 
@@ -39,6 +73,15 @@ public class ConsultationController {
         this.consultationService = consultationService;
     }
 
+    /**
+     * Crée une nouvelle consultation médicale.
+     * 
+     * <p>Déclenchée lorsqu'un médecin démarre une consultation après avoir
+     * appelé un patient depuis la file d'attente.
+     * 
+     * @param dto données de la consultation (rendezVousId obligatoire)
+     * @return ConsultationDTO créée avec ID assigné
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ConsultationDTO creerConsultation(@RequestBody @Valid ConsultationDTO dto) {
@@ -46,6 +89,26 @@ public class ConsultationController {
         return consultationService.creerConsultation(dto);
     }
 
+    /**
+     * Modifie une consultation existante.
+     * 
+     * <p>Permet de mettre à jour :
+     * <ul>
+     *   <li>Examen clinique</li>
+     *   <li>Examens supplémentaires demandés</li>
+     *   <li>Diagnostic posé</li>
+     *   <li>Traitement prescrit</li>
+     *   <li>Observations additionnelles</li>
+     *   <li>Statut archived (true = consultation terminée)</li>
+     * </ul>
+     * 
+     * <p>Lorsque archived passe de false à true, un événement Kafka
+     * "ConsultationCompleted" est publié pour déclencher la facturation.
+     * 
+     * @param id identifiant de la consultation
+     * @param dto nouvelles données de la consultation
+     * @return ConsultationDTO mise à jour
+     */
     @PutMapping("/{id}")
     public ConsultationDTO modifierConsultation(@PathVariable Long id, @RequestBody @Valid ConsultationDTO dto) {
         System.out.println("[ConsultationController] ===== PUT /api/consultations/" + id + " =====");

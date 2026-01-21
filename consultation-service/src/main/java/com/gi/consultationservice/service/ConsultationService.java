@@ -42,6 +42,46 @@ import com.gi.consultationservice.client.UserClient;
 import com.gi.consultationservice.client.PatientClient;
 import com.gi.consultationservice.client.PrescriptionClient;
 
+/**
+ * Service métier pour la gestion du cycle de vie des consultations médicales.
+ * 
+ * <p>Gère l'ensemble des opérations liées aux consultations :
+ * <ul>
+ *   <li>Création de consultation (liée à un rendez-vous)</li>
+ *   <li>Modification (examen, diagnostic, traitement)</li>
+ *   <li>Archivage (consultation terminée)</li>
+ *   <li>Historique patient (toutes consultations passées)</li>
+ *   <li>Statistiques médecin (quotidiennes, hebdomadaires)</li>
+ * </ul>
+ * 
+ * <p>Workflow consultation :
+ * <ol>
+ *   <li>Patient appelé depuis file d'attente (RDV EN_CONSULTATION)</li>
+ *   <li>Médecin crée consultation liée au rendez-vous</li>
+ *   <li>Pendant consultation : ajout examen clinique, diagnostic</li>
+ *   <li>Fin consultation : archived = true</li>
+ *   <li>Événement Kafka publishé → BillingService génère facture</li>
+ * </ol>
+ * 
+ * <p>Intégrations microservices :
+ * <ul>
+ *   <li>AppointmentClient : Mise à jour statut RDV (TERMINÉ)</li>
+ *   <li>PrescriptionClient : Récupération ordonnances associées</li>
+ *   <li>PatientClient : Informations patient pour affichage</li>
+ *   <li>UserClient : Informations médecin pour statistiques</li>
+ *   <li>NotificationClient : Notifications fin de consultation</li>
+ * </ul>
+ * 
+ * <p>Messaging Kafka :
+ * <ul>
+ *   <li>Publisher : ConsultationCompletedEvent (archived = true)</li>
+ *   <li>Consumer : Aucun (publish-only)</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Service
 @Transactional
 public class ConsultationService {
@@ -79,6 +119,16 @@ public class ConsultationService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Crée une nouvelle consultation médicale.
+     * 
+     * <p>Valide que le rendezVousId est unique (une consultation par RDV).
+     * Enregistre un événement de création dans l'audit trail.
+     * 
+     * @param dto données de la consultation
+     * @return ConsultationDTO créée avec ID assigné
+     * @throws ResponseStatusException si rendezVousId déjà utilisé
+     */
     public ConsultationDTO creerConsultation(ConsultationDTO dto) {
         Consultation consultation = consultationMapper.toEntity(dto);
         System.out.println(dto);
@@ -89,6 +139,22 @@ public class ConsultationService {
         return consultationMapper.toDTO(saved);
     }
 
+    /**
+     * Modifie une consultation existante.
+     * 
+     * <p>Logique spéciale pour l'archivage :
+     * <ul>
+     *   <li>Si archived passe de false/null à true : consultation terminée</li>
+     *   <li>Publie événement Kafka ConsultationCompletedEvent</li>
+     *   <li>Met à jour RDV status via AppointmentClient (TERMINÉ)</li>
+     *   <li>Enregistre archivedAt = maintenant</li>
+     * </ul>
+     * 
+     * @param id identifiant de la consultation
+     * @param dto nouvelles données
+     * @return ConsultationDTO mise à jour
+     * @throws ResponseStatusException si consultation non trouvée
+     */
     public ConsultationDTO modifierConsultation(Long id, ConsultationDTO dto) {
         System.out.println("[ConsultationService] Modifying consultation ID: " + id);
         System.out.println("[ConsultationService] DTO: " + dto);

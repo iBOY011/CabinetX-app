@@ -15,6 +15,39 @@ import com.gi.appointmentservice.Repository.RDVRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service métier pour la gestion de la file d'attente des rendez-vous.
+ * 
+ * <p>Gère le système de file d'attente permettant d'organiser le flux de patients
+ * en salle d'attente. Fonctionnalités principales :
+ * <ul>
+ *   <li>Ajout automatique de rendez-vous dans la file d'attente</li>
+ *   <li>Gestion des positions dans la file (queuePosition)</li>
+ *   <li>Réordonnancement manuel de la file</li>
+ *   <li>Appel du prochain patient</li>
+ *   <li>Retrait de la file d'attente</li>
+ *   <li>Notifications automatiques (SMS, push) aux patients</li>
+ * </ul>
+ * 
+ * <p>Workflow typique :
+ * <ol>
+ *   <li>Patient arrive au cabinet → addToQueue()</li>
+ *   <li>File d'attente affichée en salle d'attente → getQueueByDateAndCabinet()</li>
+ *   <li>Secrétaire/Médecin appelle le patient suivant → callNextPatient()</li>
+ *   <li>Patient entre en consultation → removeFromQueue()</li>
+ * </ol>
+ * 
+ * <p>Intégrations :
+ * <ul>
+ *   <li>PatientClient : Récupération des informations patient</li>
+ *   <li>NotificationClient : Envoi de notifications lors des changements de position</li>
+ *   <li>UserClient : Récupération des informations utilisateur (médecin)</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Service
 @RequiredArgsConstructor
 public class QueueService {

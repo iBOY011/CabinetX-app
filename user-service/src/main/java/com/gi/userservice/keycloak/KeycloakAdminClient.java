@@ -25,6 +25,41 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Client pour l'administration Keycloak via Keycloak Admin REST API.
+ * 
+ * <p>Gère la création et suppression d'utilisateurs dans Keycloak pour SSO.
+ * Synchronise les rôles CabinetX (MEDECIN, SECRETAIRE, ADMIN) avec les realm roles Keycloak.</p>
+ * 
+ * <p><b>Opérations principales :</b></p>
+ * <ol>
+ *   <li><b>createUser :</b> Crée compte Keycloak + assigne realm role (MEDECIN/SECRETAIRE/ADMIN)</li>
+ *   <li><b>deleteUser :</b> Supprime compte Keycloak (rollback si création User PostgreSQL échoue)</li>
+ * </ol>
+ * 
+ * <p><b>Authentification Admin :</b></p>
+ * <ul>
+ *   <li>Utilise grant_type=client_credentials (service account)</li>
+ *   <li>Credentials : keycloak.admin.client-id + keycloak.admin.client-secret</li>
+ *   <li>Récupère access_token via POST /realms/{realm}/protocol/openid-connect/token</li>
+ * </ul>
+ * 
+ * <p><b>Mode dégradation :</b></p>
+ * <ul>
+ *   <li>Si keycloak.admin.* non configuré → isEnabled() = false → Skip Keycloak (dev local)</li>
+ *   <li>User.keycloakUserId reste null, authentification désactivée</li>
+ * </ul>
+ * 
+ * <p><b>Rollback transactionnel :</b></p>
+ * <ul>
+ *   <li>Si assignRealmRole() échoue après createUser → deleteUser(userId) automatique</li>
+ *   <li>Évite comptes Keycloak orphelins sans rôle</li>
+ * </ul>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Service
 public class KeycloakAdminClient {
 

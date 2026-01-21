@@ -11,6 +11,26 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configuration de sécurité Spring Security pour le microservice Clinic.
+ * 
+ * <p><b>Stratégie :</b> OAuth2 Resource Server avec validation JWT Keycloak.</p>
+ * 
+ * <p><b>Endpoints sécurisés :</b></p>
+ * <ul>
+ *   <li><b>/api/clinics/** :</b> Accès ADMIN (création/modification cabinets)</li>
+ *   <li><b>/h2-console/** :</b> Public (développement uniquement)</li>
+ *   <li><b>/actuator/** :</b> Public (monitoring Prometheus)</li>
+ * </ul>
+ * 
+ * <p><b>Mode dégradation :</b> Si issuer-uri vide → Authentification désactivée (dev local).</p>
+ * 
+ * <p><b>CORS :</b> Désactivé ici, géré par Gateway (Spring Cloud Gateway).</p>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -25,6 +45,20 @@ public class SecurityConfig {
         this.jwtAuthConverter = jwtAuthConverter;
     }
 
+    /**
+     * Configure la chaîne de filtres de sécurité.
+     * 
+     * @param http Le HttpSecurity à configurer
+     * @return La chaîne de filtres configurée
+     * @throws Exception En cas d'erreur de configuration
+     * 
+     * <p><b>Configuration :</b></p>
+     * <ul>
+     *   <li>STATELESS : Pas de session HTTP (JWT bearer token)</li>
+     *   <li>CSRF désactivé (API REST sans cookies)</li>
+     *   <li>OAuth2 conditionnel (dev vs prod)</li>
+     * </ul>
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

@@ -5,6 +5,41 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO de transfert pour les opérations CRUD sur les médicaments.
+ * 
+ * <p><b>Validations :</b></p>
+ * <ul>
+ *   <li><b>commercialName :</b> @NotBlank, @Size(2-100)</li>
+ *   <li><b>dci :</b> @NotBlank, @Size(2-100) (Dénomination Commune Internationale obligatoire)</li>
+ *   <li><b>dosage :</b> @NotBlank, @Pattern (format: nombre + unité ex: 500mg, 10ml, 2.5g)</li>
+ *   <li><b>form :</b> @NotBlank, @Size(2-50) (Comprimé, Gélule, Sirop, etc.)</li>
+ * </ul>
+ * 
+ * <p><b>Formats dosage acceptés :</b></p>
+ * <ul>
+ *   <li>mg, g (masse)</li>
+ *   <li>ml, L (volume)</li>
+ *   <li>mcg, µg (microgrammes)</li>
+ *   <li>UI (Unités Internationales)</li>
+ *   <li>% (pourcentage)</li>
+ * </ul>
+ * 
+ * <p><b>Exemple JSON :</b></p>
+ * <pre>
+ * {
+ *   "id": 1,
+ *   "commercialName": "Amoxicilline Biogaran",
+ *   "dci": "Amoxicilline",
+ *   "dosage": "1g",
+ *   "form": "Comprimé pelliculé"
+ * }
+ * </pre>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

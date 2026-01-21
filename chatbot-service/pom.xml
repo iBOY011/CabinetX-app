@@ -105,6 +105,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
+        <!-- WebClient for Gemini API calls -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

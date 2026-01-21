@@ -21,6 +21,42 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entité représentant le dossier médical d'un patient.
+ * 
+ * <p>Un dossier médical est unique par patient (patientId unique) et contient :
+ * <ul>
+ *   <li>Antécédents médicaux (medicalHistory) : Maladies passées, chirurgies</li>
+ *   <li>Allergies (allergies) : Médicamenteuses, alimentaires, autres</li>
+ *   <li>Traitements en cours (treatments) : Médicaments actuels</li>
+ *   <li>Habitudes de vie (habits) : Tabac, alcool, activité physique</li>
+ *   <li>Documents attachés (documents) : Radiographies, analyses, etc.</li>
+ * </ul>
+ * 
+ * <p>Cycle de vie :
+ * <ol>
+ *   <li>Création : Automatique lors de la première consultation</li>
+ *   <li>Mise à jour : Continue par les médecins lors des consultations</li>
+ *   <li>Enrichissement : Documents ajoutés au fil du temps</li>
+ * </ol>
+ * 
+ * <p>Relation OneToMany avec MedicalDocument :
+ * <ul>
+ *   <li>Cascade ALL : Suppression dossier = suppression documents</li>
+ *   <li>orphanRemoval : Documents orphelins automatiquement supprimés</li>
+ *   <li>FetchType LAZY : Documents chargés à la demande</li>
+ * </ul>
+ * 
+ * <p>Hooks JPA :
+ * <ul>
+ *   <li>@PrePersist : Initialise creationDate et lastUpdate</li>
+ *   <li>@PreUpdate : Met à jour lastUpdate automatiquement</li>
+ * </ul>
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Entity
 @Getter
 @Setter

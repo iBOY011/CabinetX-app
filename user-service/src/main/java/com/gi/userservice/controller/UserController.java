@@ -11,6 +11,34 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Contrôleur REST pour la gestion des utilisateurs (médecins, secrétaires, admins).
+ * 
+ * <p>Expose des endpoints pour créer, modifier, activer/désactiver et consulter les utilisateurs.
+ * Intègre Keycloak pour l'authentification et gestion des rôles (MEDECIN, SECRETAIRE, ADMIN).</p>
+ * 
+ * <p><b>Endpoints disponibles :</b></p>
+ * <ul>
+ *   <li>POST /api/users - Créer un utilisateur (+ compte Keycloak + profil médecin/secrétaire)</li>
+ *   <li>PUT /api/users/{id} - Mettre à jour un utilisateur</li>
+ *   <li>POST /api/users/{id}/activate - Activer un compte</li>
+ *   <li>POST /api/users/{id}/deactivate - Désactiver un compte</li>
+ *   <li>GET /api/users/{id} - Récupérer un utilisateur par ID</li>
+ *   <li>GET /api/users/login/{login} - Récupérer par login/email</li>
+ *   <li>GET /api/users - Liste tous les utilisateurs</li>
+ *   <li>GET /api/users/clinic/{clinicId} - Utilisateurs d'une clinique</li>
+ *   <li>GET /api/users/role/{role} - Filtrer par rôle</li>
+ *   <li>GET /api/users/by-cabinet-and-role?cabinetId=X&role=Y - Filtrer par clinique ET rôle</li>
+ * </ul>
+ * 
+ * <p><b>Sécurité :</b> ADMIN peut tout faire, MEDECIN/SECRETAIRE peuvent consulter leur propre profil uniquement.</p>
+ * 
+ * <p><b>Règle métier :</b> Une clinique ne peut avoir qu'UN SEUL médecin et UNE SEULE secrétaire (contrainte enforce dans le service).</p>
+ * 
+ * @author CabinetX Team
+ * @version 1.0
+ * @since 2024
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

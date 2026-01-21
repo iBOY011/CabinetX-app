@@ -24,6 +24,30 @@ import com.gi.appointmentservice.Service.RDVService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Contrôleur REST pour la gestion des rendez-vous médicaux.
+ * 
+ * <p>Expose les endpoints suivants :
+ * <ul>
+ *   <li>POST /api/appointments/rendezvous : Création de rendez-vous</li>
+ *   <li>GET /api/appointments/{id} : Consultation d'un rendez-vous</li>
+ *   <li>GET /api/appointments/patients/{patientId}/today : RDV du jour pour un patient</li>
+ *   <li>PUT /api/appointments/update/{id} : Modification d'un rendez-vous</li>
+ *   <li>PUT /api/appointments/updateStatus/{id}/{statut} : Changement de statut</li>
+ *   <li>DELETE /api/appointments/delete/{id} : Suppression d'un rendez-vous</li>
+ *   <li>GET /api/appointments/by-date : Liste des RDV par date et cabinet</li>
+ * </ul>
+ * 
+ * <p>Tous les endpoints retournent des RDVResponse enrichis avec les informations
+ * complètes du patient (nom, prénom, CIN, etc.).
+ * 
+ * <p>Sécurité : Les endpoints sont protégés par la gateway (authentification JWT).
+ * Les rôles SECRETAIRE et MEDECIN peuvent accéder à ces ressources.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/appointments")
@@ -43,6 +67,13 @@ public class RDVController {
         return "Welcome to the Appointment Service!";
     }
 
+    /**
+     * Crée un nouveau rendez-vous.
+     * 
+     * @param request les informations du rendez-vous (patientId, cabinetId, date, heures, motif)
+     * @return 200 OK avec RDVResponse si création réussie
+     * @throws IllegalArgumentException si validation échouée (400 Bad Request)
+     */
     @PostMapping("/rendezvous")
     public ResponseEntity<RDVResponse> createRendezVous(@RequestBody RDVRequest request) {
 
@@ -50,6 +81,13 @@ public class RDVController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Récupère un rendez-vous par son identifiant.
+     * 
+     * @param id identifiant du rendez-vous
+     * @return 200 OK avec RDVResponse incluant les informations patient
+     * @throws ResourceNotFoundException si le rendez-vous n'existe pas (404 Not Found)
+     */
     @GetMapping("/{id}")
     public ResponseEntity<RDVResponse> getRendezVousById(@PathVariable Long id) {
         RDVResponse response = rdvService.getRendezVousById(id);
@@ -74,6 +112,16 @@ public class RDVController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Met à jour le statut d'un rendez-vous.
+     * 
+     * <p>Statuts possibles : CONFIRME, EN_ATTENTE, EN_CONSULTATION, TERMINE, ANNULE, MISSING
+     * 
+     * @param id identifiant du rendez-vous
+     * @param statut nouveau statut à appliquer
+     * @return 200 OK avec RDVResponse si mise à jour réussie
+     * @throws IllegalArgumentException si transition de statut invalide (400 Bad Request)
+     */
     @PutMapping("/updateStatus/{id}/{statut}")
     public ResponseEntity<RDVResponse> updateStatusRendezVous(@PathVariable Long id, @PathVariable StatutRDV statut) {
         RDVResponse response = rdvService.updateStatusRendezVous(id, statut);

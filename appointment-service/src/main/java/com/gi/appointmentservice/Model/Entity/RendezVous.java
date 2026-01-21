@@ -17,6 +17,34 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entité représentant un rendez-vous médical.
+ * 
+ * <p>Stocké dans la base de données appointment_db. Cette entité contient toutes
+ * les informations nécessaires à la gestion des rendez-vous :
+ * <ul>
+ *   <li>Informations temporelles (date, heure début/fin)</li>
+ *   <li>Références aux entités externes (patientId, cabinetId)</li>
+ *   <li>Informations médicales (motif, notes)</li>
+ *   <li>Gestion du statut (CONFIRMÉ, EN_ATTENTE, EN_CONSULTATION, etc.)</li>
+ *   <li>Position dans la file d'attente (queuePosition)</li>
+ * </ul>
+ * 
+ * <p>Cycle de vie typique d'un rendez-vous :
+ * <ol>
+ *   <li>Création : statut = CONFIRMÉ</li>
+ *   <li>Arrivée du patient : statut = EN_ATTENTE, queuePosition assignée</li>
+ *   <li>Appel du patient : statut = EN_CONSULTATION</li>
+ *   <li>Fin de consultation : statut = TERMINÉ</li>
+ * </ol>
+ * 
+ * <p>La propriété queuePosition est nullable et utilisée uniquement lorsque
+ * le rendez-vous est EN_ATTENTE dans la file virtuelle.
+ * 
+ * @author CabinetX Development Team
+ * @version 1.0
+ * @since 2024-01
+ */
 @Entity
 @Data
 @NoArgsConstructor
